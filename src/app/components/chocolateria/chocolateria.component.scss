@@ -1,0 +1,159 @@
+.choco-container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 40%, #0a0a0a 100%);
+}
+
+.choco-hero {
+  padding: 80px 20px 40px;
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
+.choco-hero-content {
+  max-width: 800px;
+  color: #fff;
+}
+
+.choco-title {
+  font-size: 3rem;
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 700;
+  color: #ffcc00;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.choco-subtitle {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 24px;
+}
+
+.choco-hero-button {
+  height: 56px;
+  padding: 0 32px;
+  border-radius: 28px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.choco-section {
+  padding: 20px 20px 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 2.2rem;
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 700;
+  color: #ffcc00;
+  margin-bottom: 40px;
+}
+
+.section-title mat-icon {
+  color: #ff1a1a;
+}
+
+.choco-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
+}
+
+.choco-card {
+  background: #151515;
+  color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+}
+
+.choco-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.choco-card-header mat-icon {
+  color: #ffcc00;
+}
+
+.choco-tag {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 204, 0, 0.1);
+  border: 1px solid rgba(255, 204, 0, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.choco-card-title {
+  font-size: 1.3rem;
+  margin: 0 0 8px;
+}
+
+.choco-card-desc {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 16px;
+}
+
+.choco-cta {
+  padding: 60px 20px 80px;
+}
+
+.choco-cta-content {
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+  background: radial-gradient(circle at top, rgba(255, 26, 26, 0.35), transparent 60%);
+  border-radius: 24px;
+  padding: 40px 24px;
+}
+
+.choco-cta-content h2 {
+  font-size: 2.2rem;
+  color: #ffcc00;
+  margin-bottom: 12px;
+}
+
+.choco-cta-content p {
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 24px;
+}
+
+.choco-cta-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.choco-cta-buttons button {
+  min-width: 180px;
+}
+
+@media (max-width: 768px) {
+  .choco-title {
+    font-size: 2.2rem;
+  }
+
+  .choco-section {
+    padding: 10px 16px 60px;
+  }
+
+  .choco-cta-content {
+    padding: 32px 18px;
+  }
+}
