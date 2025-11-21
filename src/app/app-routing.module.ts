@@ -49,6 +49,10 @@ const routes: Routes = [
     loadChildren: () => import('./components/contacto/contacto.module').then(m => m.ContactoModule)
   },
   {
+    path: 'chocolateria',
+    loadChildren: () => import('./components/chocolateria/chocolateria.module').then(m => m.ChocolateriaModule)
+  },
+  {
     path: 'acceso-denegado',
     loadComponent: () => import('./components/acceso-denegado/acceso-denegado.component').then(c => c.AccesoDenegadoComponent)
   },
