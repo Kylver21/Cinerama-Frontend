@@ -1,0 +1,352 @@
+/* CINERAMA - Estilos Globales */
+
+/* Importar fuentes */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;700&family=Roboto:wght@300;400;500;700&display=swap');
+
+/* Variables de colores CINERAMA */
+:root {
+  --cinerama-red-dark: #a00000;
+  --cinerama-red-bright: #ff1a1a;
+  --cinerama-gray: #b3b3b3;
+  --cinerama-black: #0a0a0a;
+  --cinerama-gold: #ffcc00;
+  --cinerama-white: #ffffff;
+  --cinerama-dark-bg: #1a1a1a;
+  --cinerama-card-bg: #2a2a2a;
+  --cinerama-text-light: #e0e0e0;
+  --cinerama-text-muted: #888888;
+}
+
+/* Modo claro */
+.light-theme {
+  --cinerama-bg-primary: #ffffff;
+  --cinerama-bg-secondary: #f5f5f5;
+  --cinerama-text-primary: #333333;
+  --cinerama-text-secondary: #666666;
+  --cinerama-card-bg: #ffffff;
+  --cinerama-border: #e0e0e0;
+}
+
+/* Modo oscuro (por defecto) */
+.dark-theme {
+  --cinerama-bg-primary: #0a0a0a;
+  --cinerama-bg-secondary: #1a1a1a;
+  --cinerama-text-primary: #e0e0e0;
+  --cinerama-text-secondary: #b3b3b3;
+  --cinerama-card-bg: #2a2a2a;
+  --cinerama-border: #444444;
+}
+
+/* Reset y estilos base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Roboto', sans-serif;
+  background: var(--cinerama-bg-primary);
+  color: var(--cinerama-text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body {
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+  background: linear-gradient(135deg, var(--cinerama-black) 0%, var(--cinerama-red-dark) 100%);
+  min-height: 100vh;
+}
+
+/* Tipografía */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 700;
+  color: var(--cinerama-text-primary);
+}
+
+h1 {
+  font-size: 2.5rem;
+  color: var(--cinerama-red-bright);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+h2 {
+  font-size: 2rem;
+  color: var(--cinerama-gold);
+}
+
+h3 {
+  font-size: 1.5rem;
+  color: var(--cinerama-text-primary);
+}
+
+/* Botones personalizados */
+.btn-cinerama {
+  background: linear-gradient(45deg, var(--cinerama-red-dark), var(--cinerama-red-bright));
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 26, 26, 0.3);
+}
+
+.btn-cinerama:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 26, 26, 0.4);
+  background: linear-gradient(45deg, var(--cinerama-red-bright), var(--cinerama-red-dark));
+}
+
+.btn-cinerama:active {
+  transform: translateY(0);
+}
+
+.btn-cinerama-outline {
+  background: transparent;
+  color: var(--cinerama-red-bright);
+  border: 2px solid var(--cinerama-red-bright);
+  padding: 10px 22px;
+  border-radius: 25px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+}
+
+.btn-cinerama-outline:hover {
+  background: var(--cinerama-red-bright);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 26, 26, 0.3);
+}
+
+/* Cards personalizadas */
+.card-cinerama {
+  background: var(--cinerama-card-bg);
+  border-radius: 15px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--cinerama-border);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.card-cinerama:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Efectos de hover para carteles de películas */
+.movie-poster {
+  transition: all 0.3s ease;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.movie-poster:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 30px rgba(255, 26, 26, 0.3);
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.slide-in-left {
+  animation: slideInFromLeft 0.6s ease-out;
+}
+
+.slide-in-right {
+  animation: slideInFromRight 0.6s ease-out;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cinerama-dark-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cinerama-red-bright);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cinerama-red-dark);
+}
+
+/* Utilidades */
+.text-cinerama-red {
+  color: var(--cinerama-red-bright) !important;
+}
+
+.text-cinerama-gold {
+  color: var(--cinerama-gold) !important;
+}
+
+.bg-cinerama-red {
+  background-color: var(--cinerama-red-bright) !important;
+}
+
+.bg-cinerama-dark {
+  background-color: var(--cinerama-black) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  .btn-cinerama,
+  .btn-cinerama-outline {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Override de Angular Material para tema CINERAMA */
+.mat-mdc-card {
+  background: var(--cinerama-card-bg) !important;
+  color: var(--cinerama-text-primary) !important;
+  border: 1px solid var(--cinerama-border) !important;
+}
+
+.mat-mdc-button.mat-primary {
+  background-color: var(--cinerama-red-bright) !important;
+  color: white !important;
+}
+
+.mat-mdc-button.mat-primary:hover {
+  background-color: var(--cinerama-red-dark) !important;
+}
+
+.mat-mdc-form-field {
+  color: var(--cinerama-text-primary) !important;
+}
+
+.mat-mdc-input-element {
+  color: var(--cinerama-text-primary) !important;
+}
+
+.mat-mdc-form-field-label {
+  color: var(--cinerama-text-secondary) !important;
+}
+
+/* Estilos para el mapa de asientos */
+.seat-map {
+  display: grid;
+  gap: 5px;
+  justify-content: center;
+  padding: 20px;
+  background: var(--cinerama-card-bg);
+  border-radius: 10px;
+  margin: 20px 0;
+}
+
+.seat {
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.seat.available {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.seat.available:hover {
+  background-color: #45a049;
+  transform: scale(1.1);
+}
+
+.seat.selected {
+  background-color: var(--cinerama-gold);
+  color: var(--cinerama-black);
+  border-color: var(--cinerama-red-bright);
+}
+
+.seat.occupied {
+  background-color: #f44336;
+  color: white;
+  cursor: not-allowed;
+}
+
+.seat.vip {
+  background-color: var(--cinerama-red-dark);
+  color: white;
+}
+
+.seat.vip.available:hover {
+  background-color: var(--cinerama-red-bright);
+}
+
+/* Loading spinner personalizado */
+.cinerama-spinner {
+  border: 4px solid var(--cinerama-gray);
+  border-top: 4px solid var(--cinerama-red-bright);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+

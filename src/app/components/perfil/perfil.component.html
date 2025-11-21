@@ -1,0 +1,44 @@
+<div class="perfil-container">
+  <div class="perfil-header">
+    <h1 class="page-title">
+      <mat-icon>person</mat-icon>
+      Mi Perfil
+    </h1>
+  </div>
+
+  <div *ngIf="currentUser" class="perfil-content">
+    <div class="perfil-info">
+      <div class="avatar-section">
+        <mat-icon class="avatar-icon">account_circle</mat-icon>
+        <h2>{{ currentUser?.username }}</h2>
+        <p>{{ currentUser?.email }}</p>
+      </div>
+    </div>
+
+    <div class="perfil-tabs">
+      <mat-tab-group>
+        <mat-tab label="Información Personal">
+          <div class="tab-content">
+            <p>Información personal - En desarrollo</p>
+          </div>
+        </mat-tab>
+        
+        <mat-tab label="Mis Compras">
+          <div class="tab-content">
+            <p>Historial de compras - En desarrollo</p>
+          </div>
+        </mat-tab>
+        
+        <mat-tab label="Configuración">
+          <div class="tab-content">
+            <p>Configuración de cuenta - En desarrollo</p>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  </div>
+</div>
+
+
+
+

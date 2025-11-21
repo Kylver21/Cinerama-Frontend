@@ -1,0 +1,196 @@
+<div class="registro-container">
+  <div class="registro-card">
+    <div class="registro-header">
+      <mat-icon class="registro-icon">movie</mat-icon>
+      <h1>CINERAMA</h1>
+      <p>Crea tu cuenta</p>
+    </div>
+
+    <form [formGroup]="registroForm" (ngSubmit)="onSubmit()" class="registro-form">
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>Nombre</mat-label>
+          <input matInput 
+                 formControlName="nombre" 
+                 placeholder="Tu nombre"
+                 autocomplete="given-name">
+          <mat-icon matSuffix>person</mat-icon>
+          <mat-error *ngIf="registroForm.get('nombre')?.hasError('required') && registroForm.get('nombre')?.touched">
+            {{ getErrorMessage('nombre') }}
+          </mat-error>
+          <mat-error *ngIf="registroForm.get('nombre')?.hasError('minlength') && registroForm.get('nombre')?.touched">
+            {{ getErrorMessage('nombre') }}
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>Apellido</mat-label>
+          <input matInput 
+                 formControlName="apellido" 
+                 placeholder="Tu apellido"
+                 autocomplete="family-name">
+          <mat-icon matSuffix>person</mat-icon>
+          <mat-error *ngIf="registroForm.get('apellido')?.hasError('required') && registroForm.get('apellido')?.touched">
+            {{ getErrorMessage('apellido') }}
+          </mat-error>
+          <mat-error *ngIf="registroForm.get('apellido')?.hasError('minlength') && registroForm.get('apellido')?.touched">
+            {{ getErrorMessage('apellido') }}
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Usuario</mat-label>
+        <input matInput 
+               formControlName="username" 
+               placeholder="Elige un nombre de usuario"
+               autocomplete="username">
+        <mat-icon matSuffix>account_circle</mat-icon>
+        <mat-error *ngIf="registroForm.get('username')?.hasError('required') && registroForm.get('username')?.touched">
+          {{ getErrorMessage('username') }}
+        </mat-error>
+        <mat-error *ngIf="registroForm.get('username')?.hasError('minlength') && registroForm.get('username')?.touched">
+          {{ getErrorMessage('username') }}
+        </mat-error>
+        <mat-error *ngIf="registroForm.get('username')?.hasError('maxlength') && registroForm.get('username')?.touched">
+          {{ getErrorMessage('username') }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input matInput 
+               type="email"
+               formControlName="email" 
+               placeholder="tu@email.com"
+               autocomplete="email">
+        <mat-icon matSuffix>email</mat-icon>
+        <mat-error *ngIf="registroForm.get('email')?.hasError('required') && registroForm.get('email')?.touched">
+          {{ getErrorMessage('email') }}
+        </mat-error>
+        <mat-error *ngIf="registroForm.get('email')?.hasError('email') && registroForm.get('email')?.touched">
+          {{ getErrorMessage('email') }}
+        </mat-error>
+      </mat-form-field>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>Teléfono</mat-label>
+          <input matInput 
+                 formControlName="telefono" 
+                 placeholder="123456789"
+                 maxlength="9"
+                 autocomplete="tel">
+          <mat-icon matSuffix>phone</mat-icon>
+          <mat-hint>9 dígitos</mat-hint>
+          <mat-error *ngIf="registroForm.get('telefono')?.hasError('required') && registroForm.get('telefono')?.touched">
+            {{ getErrorMessage('telefono') }}
+          </mat-error>
+          <mat-error *ngIf="registroForm.get('telefono')?.hasError('pattern') && registroForm.get('telefono')?.touched">
+            El teléfono debe tener exactamente 9 dígitos
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>Tipo de Documento</mat-label>
+          <mat-select formControlName="tipoDocumento" required>
+            <mat-option value="DNI">DNI</mat-option>
+            <mat-option value="PASAPORTE">Pasaporte</mat-option>
+            <mat-option value="CARNET_EXTRANJERIA">Carnet de Extranjería</mat-option>
+          </mat-select>
+          <mat-icon matSuffix>badge</mat-icon>
+          <mat-error *ngIf="registroForm.get('tipoDocumento')?.hasError('required') && registroForm.get('tipoDocumento')?.touched">
+            {{ getErrorMessage('tipoDocumento') }}
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Número de Documento</mat-label>
+        <input matInput 
+               formControlName="numeroDocumento" 
+               placeholder="12345678"
+               autocomplete="off">
+        <mat-icon matSuffix>badge</mat-icon>
+        <mat-error *ngIf="registroForm.get('numeroDocumento')?.hasError('required') && registroForm.get('numeroDocumento')?.touched">
+          {{ getErrorMessage('numeroDocumento') }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Contraseña</mat-label>
+        <input matInput 
+               [type]="hidePassword ? 'password' : 'text'"
+               formControlName="password" 
+               placeholder="Mínimo 6 caracteres"
+               autocomplete="new-password">
+        <button mat-icon-button 
+                matSuffix 
+                type="button"
+                (click)="hidePassword = !hidePassword"
+                [attr.aria-label]="'Ocultar contraseña'"
+                [attr.aria-pressed]="hidePassword">
+          <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        <mat-error *ngIf="registroForm.get('password')?.hasError('required') && registroForm.get('password')?.touched">
+          {{ getErrorMessage('password') }}
+        </mat-error>
+        <mat-error *ngIf="registroForm.get('password')?.hasError('minlength') && registroForm.get('password')?.touched">
+          {{ getErrorMessage('password') }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Confirmar Contraseña</mat-label>
+        <input matInput 
+               [type]="hideConfirmPassword ? 'password' : 'text'"
+               formControlName="confirmPassword" 
+               placeholder="Repite tu contraseña"
+               autocomplete="new-password">
+        <button mat-icon-button 
+                matSuffix 
+                type="button"
+                (click)="hideConfirmPassword = !hideConfirmPassword"
+                [attr.aria-label]="'Ocultar contraseña'"
+                [attr.aria-pressed]="hideConfirmPassword">
+          <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        <mat-error *ngIf="registroForm.get('confirmPassword')?.hasError('required') && registroForm.get('confirmPassword')?.touched">
+          {{ getErrorMessage('confirmPassword') }}
+        </mat-error>
+        <mat-error *ngIf="getPasswordMismatchError()">
+          {{ getPasswordMismatchError() }}
+        </mat-error>
+      </mat-form-field>
+
+      <div class="terms-section">
+        <mat-checkbox formControlName="aceptarTerminos" class="terms-checkbox">
+          Acepto los <a href="#" class="terms-link">términos y condiciones</a> y la <a href="#" class="terms-link">política de privacidad</a>
+        </mat-checkbox>
+        <mat-error *ngIf="registroForm.get('aceptarTerminos')?.hasError('requiredTrue') && registroForm.get('aceptarTerminos')?.touched">
+          {{ getErrorMessage('aceptarTerminos') }}
+        </mat-error>
+      </div>
+
+      <button mat-raised-button 
+              color="primary" 
+              type="submit" 
+              class="registro-button"
+              [disabled]="loading || registroForm.invalid">
+        <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+        <span *ngIf="!loading">Crear Cuenta</span>
+      </button>
+    </form>
+
+    <div class="registro-footer">
+      <p>¿Ya tienes una cuenta?</p>
+      <button mat-button color="accent" (click)="irALogin()">
+        Inicia sesión aquí
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+

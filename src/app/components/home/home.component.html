@@ -1,0 +1,172 @@
+<div class="home-container">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">Bienvenido a CINERAMA</h1>
+      <p class="hero-subtitle">Tu cine de confianza con las mejores películas</p>
+      <button mat-raised-button color="primary" class="hero-button" routerLink="/peliculas">
+        <mat-icon>movie</mat-icon>
+        Ver Películas
+      </button>
+    </div>
+    <div class="hero-background">
+      <div class="hero-overlay"></div>
+    </div>
+  </section>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando películas...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="error-container">
+    <mat-icon>error</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-button (click)="cargarDatosIniciales()">Reintentar</button>
+  </div>
+
+  <!-- Contenido principal -->
+  <div *ngIf="!loading && !error" class="main-content">
+    
+    <!-- Películas Destacadas -->
+    <section class="section" *ngIf="peliculasDestacadas.length > 0">
+      <h2 class="section-title">
+        <mat-icon>star</mat-icon>
+        Películas Destacadas
+      </h2>
+      <p-carousel 
+        [value]="peliculasDestacadas" 
+        [numVisible]="1" 
+        [numScroll]="1"
+        [circular]="true"
+        [autoplayInterval]="5000"
+        class="destacadas-carousel">
+        <ng-template let-pelicula pTemplate="item">
+          <div class="destacada-item">
+            <div class="destacada-backdrop" 
+                 [style.background-image]="'url(' + obtenerImagenBackdrop(pelicula) + ')'">
+              <div class="destacada-overlay">
+                <div class="destacada-content">
+                  <h3>{{ pelicula.titulo }}</h3>
+                  <p class="destacada-sinopsis">{{ pelicula.sinopsis | slice:0:200 }}...</p>
+                  <div class="destacada-info">
+                    <span class="rating">
+                      <mat-icon>star</mat-icon>
+                      {{ pelicula.votoPromedio | number:'1.1-1' }}
+                    </span>
+                    <span class="duration">{{ formatearDuracion(pelicula.duracion) }}</span>
+                    <span class="clasificacion">{{ pelicula.clasificacion }}</span>
+                  </div>
+                  <button mat-raised-button color="accent" class="destacada-button" [routerLink]="['/peliculas', pelicula.id]">
+                    Ver Detalles
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </p-carousel>
+    </section>
+
+    <!-- En Cartelera -->
+    <section class="section" *ngIf="peliculasEnCartelera.length > 0">
+      <h2 class="section-title">
+        <mat-icon>local_movies</mat-icon>
+        En Cartelera
+      </h2>
+      <div class="movies-grid">
+        <div *ngFor="let pelicula of peliculasEnCartelera" class="movie-card">
+          <div class="movie-poster">
+            <img 
+              [src]="obtenerImagenPoster(pelicula)" 
+              [alt]="pelicula.titulo"
+              class="poster-image">
+            <div class="movie-overlay">
+              <button mat-icon-button class="play-button">
+                <mat-icon>play_arrow</mat-icon>
+              </button>
+            </div>
+          </div>
+          <div class="movie-info">
+            <h3 class="movie-title">{{ pelicula.titulo }}</h3>
+            <div class="movie-meta">
+              <span class="rating">
+                <mat-icon>star</mat-icon>
+                {{ pelicula.votoPromedio | number:'1.1-1' }}
+              </span>
+              <span class="duration">{{ formatearDuracion(pelicula.duracion) }}</span>
+            </div>
+            <div class="movie-genres">
+              <mat-chip *ngFor="let genero of obtenerGeneros(pelicula)" class="genre-chip">
+                {{ genero }}
+              </mat-chip>
+            </div>
+            <button mat-button color="primary" class="movie-button" [routerLink]="['/peliculas', pelicula.id]">
+              Ver Horarios
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Próximos Estrenos -->
+    <section class="section" *ngIf="proximosEstrenos.length > 0">
+      <h2 class="section-title">
+        <mat-icon>schedule</mat-icon>
+        Próximos Estrenos
+      </h2>
+      <div class="movies-grid">
+        <div *ngFor="let pelicula of proximosEstrenos" class="movie-card">
+          <div class="movie-poster">
+            <img 
+              [src]="obtenerImagenPoster(pelicula)" 
+              [alt]="pelicula.titulo"
+              class="poster-image">
+            <div class="movie-overlay">
+              <button mat-icon-button class="play-button">
+                <mat-icon>play_arrow</mat-icon>
+              </button>
+            </div>
+          </div>
+          <div class="movie-info">
+            <h3 class="movie-title">{{ pelicula.titulo }}</h3>
+            <div class="movie-meta">
+              <span class="rating">
+                <mat-icon>star</mat-icon>
+                {{ pelicula.votoPromedio | number:'1.1-1' }}
+              </span>
+              <span class="release-date">{{ pelicula.fechaEstreno | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <button mat-button color="accent" class="movie-button" [routerLink]="['/peliculas', pelicula.id]">
+              Más Información
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="cta-section">
+      <div class="cta-content">
+        <h2>¿Listo para la experiencia CINERAMA?</h2>
+        <p>Disfruta de las mejores películas en la comodidad de nuestras salas</p>
+        <div class="cta-buttons">
+          <button mat-raised-button color="primary" routerLink="/funciones">
+            <mat-icon>schedule</mat-icon>
+            Ver Funciones
+          </button>
+          <button mat-button color="accent" routerLink="/peliculas">
+            <mat-icon>search</mat-icon>
+            Buscar Películas
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+
+
+

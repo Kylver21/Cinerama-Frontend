@@ -1,0 +1,211 @@
+<div class="pelicula-detalle-container">
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando película...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="error-container">
+    <mat-icon>error</mat-icon>
+    <h3>{{ error }}</h3>
+    <button mat-raised-button color="primary" (click)="volverAtras()">
+      <mat-icon>arrow_back</mat-icon>
+      Volver a Películas
+    </button>
+  </div>
+
+  <!-- Contenido principal -->
+  <div *ngIf="!loading && !error && pelicula" class="pelicula-content">
+    <!-- Hero Section -->
+    <div class="pelicula-hero" [style.background-image]="'url(' + obtenerImagenBackdrop(pelicula) + ')'">
+      <div class="hero-overlay">
+        <div class="hero-content">
+          <button mat-icon-button class="back-button" (click)="volverAtras()">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          
+          <div class="hero-info">
+            <div class="pelicula-poster">
+              <p-image 
+                [src]="obtenerImagenPoster(pelicula)" 
+                [alt]="pelicula.titulo"
+                width="200px"
+                height="300px"
+                [preview]="true">
+              </p-image>
+            </div>
+            
+            <div class="pelicula-details">
+              <h1 class="pelicula-titulo">{{ pelicula.titulo }}</h1>
+              
+              <div class="pelicula-meta">
+                <div class="rating">
+                  <mat-icon>star</mat-icon>
+                  <span>{{ pelicula.votoPromedio | number:'1.1-1' }}/10</span>
+                </div>
+                <div class="duracion">
+                  <mat-icon>schedule</mat-icon>
+                  <span>{{ formatearDuracion(pelicula.duracion) }}</span>
+                </div>
+                <div class="clasificacion">{{ pelicula.clasificacion }}</div>
+                <div class="fecha-estreno">
+                  <mat-icon>calendar_today</mat-icon>
+                  <span>{{ formatearFecha(pelicula.fechaEstreno) }}</span>
+                </div>
+              </div>
+              
+              <div class="pelicula-generos">
+                <mat-chip *ngFor="let genero of obtenerGeneros(pelicula)" class="genero-chip">
+                  {{ genero }}
+                </mat-chip>
+              </div>
+              
+              <div class="pelicula-actions">
+                <button mat-raised-button color="primary" class="action-button" (click)="selectedTab = 1">
+                  <mat-icon>schedule</mat-icon>
+                  Ver Horarios
+                </button>
+                <button mat-button color="accent" class="action-button">
+                  <mat-icon>favorite_border</mat-icon>
+                  Favorito
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="pelicula-tabs">
+      <mat-tab-group [(selectedIndex)]="selectedTab" class="custom-tabs">
+        <!-- Sinopsis -->
+        <mat-tab label="Sinopsis">
+          <div class="tab-content">
+            <h3>Sinopsis</h3>
+            <p class="sinopsis-text">{{ pelicula.sinopsis }}</p>
+            
+            <div class="pelicula-stats">
+              <div class="stat-item">
+                <mat-icon>visibility</mat-icon>
+                <span>Popularidad: {{ pelicula.popularidad | number:'1.0-0' }}</span>
+              </div>
+              <div class="stat-item">
+                <mat-icon>people</mat-icon>
+                <span>Votos: {{ pelicula.totalVotos | number }}</span>
+              </div>
+              <div class="stat-item">
+                <mat-icon>language</mat-icon>
+                <span>Idioma: {{ pelicula.idiomaOriginal }}</span>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Horarios -->
+        <mat-tab label="Horarios">
+          <div class="tab-content">
+            <h3>Funciones Disponibles</h3>
+            
+            <div *ngIf="funciones.length === 0" class="no-funciones">
+              <mat-icon>schedule</mat-icon>
+              <p>No hay funciones disponibles para esta película</p>
+            </div>
+            
+            <div *ngIf="funciones.length > 0" class="funciones-container">
+              <div *ngFor="let fecha of obtenerFechasOrdenadas()" class="fecha-section">
+                <h4 class="fecha-titulo">{{ formatearFechaCompleta(fecha) }}</h4>
+                <div class="funciones-grid">
+                  <div *ngFor="let funcion of obtenerFuncionesPorFecha()[fecha]" 
+                       class="funcion-card"
+                       (click)="comprarEntrada(funcion)">
+                    <div class="funcion-hora">
+                      <mat-icon>access_time</mat-icon>
+                      <span>{{ formatearHora(funcion.fechaHora) }}</span>
+                    </div>
+                    <div class="funcion-sala">
+                      <mat-icon>room</mat-icon>
+                      <span>{{ funcion.sala.nombre }}</span>
+                    </div>
+                    <div class="funcion-precio">
+                      <mat-icon>attach_money</mat-icon>
+                      <span>S/ {{ funcion.precio | number:'1.2-2' }}</span>
+                    </div>
+                    <div class="funcion-tipo">
+                      <mat-chip class="tipo-chip" *ngIf="obtenerTipoSala(funcion.sala)">{{ obtenerTipoSala(funcion.sala) }}</mat-chip>
+                    </div>
+                    <button mat-raised-button color="primary" class="comprar-btn">
+                      Comprar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Información Técnica -->
+        <mat-tab label="Información">
+          <div class="tab-content">
+            <h3>Información Técnica</h3>
+            
+            <div class="info-grid">
+              <div class="info-item">
+                <mat-icon>title</mat-icon>
+                <div>
+                  <strong>Título Original</strong>
+                  <p>{{ pelicula.tituloOriginal || pelicula.titulo }}</p>
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <mat-icon>schedule</mat-icon>
+                <div>
+                  <strong>Duración</strong>
+                  <p>{{ formatearDuracion(pelicula.duracion) }}</p>
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <mat-icon>category</mat-icon>
+                <div>
+                  <strong>Géneros</strong>
+                  <p>{{ pelicula.genero }}</p>
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <mat-icon>verified</mat-icon>
+                <div>
+                  <strong>Clasificación</strong>
+                  <p>{{ pelicula.clasificacion }}</p>
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <mat-icon>calendar_today</mat-icon>
+                <div>
+                  <strong>Fecha de Estreno</strong>
+                  <p>{{ formatearFecha(pelicula.fechaEstreno) }}</p>
+                </div>
+              </div>
+              
+              <div class="info-item">
+                <mat-icon>language</mat-icon>
+                <div>
+                  <strong>Idioma Original</strong>
+                  <p>{{ pelicula.idiomaOriginal }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  </div>
+</div>
+
+
+
+

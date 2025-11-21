@@ -1,0 +1,85 @@
+<div class="contacto-container">
+  <div class="contacto-header">
+    <h1 class="page-title">
+      <mat-icon>contact_mail</mat-icon>
+      Contacto
+    </h1>
+  </div>
+
+  <div class="contacto-content">
+    <div class="contacto-info">
+      <div class="info-card">
+        <mat-icon>location_on</mat-icon>
+        <h3>Dirección</h3>
+        <p>Av. José Olaya 123<br>Chimbote, Perú</p>
+      </div>
+
+      <div class="info-card">
+        <mat-icon>phone</mat-icon>
+        <h3>Teléfono</h3>
+        <p>(043) 234-5678<br>WhatsApp: +51 987 654 321</p>
+      </div>
+
+      <div class="info-card">
+        <mat-icon>email</mat-icon>
+        <h3>Email</h3>
+        <p>info&#64;cineramachimbote.com<br>ventas&#64;cineramachimbote.com</p>
+      </div>
+
+      <div class="info-card">
+        <mat-icon>schedule</mat-icon>
+        <h3>Horarios</h3>
+        <p>Lunes - Domingo<br>10:00 AM - 11:00 PM</p>
+      </div>
+    </div>
+
+    <div class="contacto-form">
+      <h2>Envíanos un Mensaje</h2>
+      
+      <form [formGroup]="contactoForm" (ngSubmit)="onSubmit()" class="form">
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Nombre Completo</mat-label>
+            <input matInput formControlName="nombre" placeholder="Tu nombre completo">
+            <mat-icon matSuffix>person</mat-icon>
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" placeholder="tu@email.com">
+            <mat-icon matSuffix>email</mat-icon>
+          </mat-form-field>
+        </div>
+        
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Teléfono</mat-label>
+            <input matInput formControlName="telefono" placeholder="123456789">
+            <mat-icon matSuffix>phone</mat-icon>
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Asunto</mat-label>
+            <input matInput formControlName="asunto" placeholder="Motivo de contacto">
+            <mat-icon matSuffix>subject</mat-icon>
+          </mat-form-field>
+        </div>
+        
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Mensaje</mat-label>
+          <textarea matInput formControlName="mensaje" placeholder="Escribe tu mensaje aquí..." rows="5"></textarea>
+          <mat-icon matSuffix>message</mat-icon>
+        </mat-form-field>
+        
+        <button mat-raised-button color="primary" type="submit" class="submit-button">
+          <mat-icon>send</mat-icon>
+          Enviar Mensaje
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+

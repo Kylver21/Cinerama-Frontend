@@ -1,0 +1,487 @@
+<div class="admin-container">
+  <div class="admin-header">
+    <h1 class="page-title">
+      <mat-icon>admin_panel_settings</mat-icon>
+      Panel de Administración
+    </h1>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando estadísticas...</p>
+  </div>
+
+  <!-- Contenido principal -->
+  <div *ngIf="!loading" class="admin-content">
+    
+    <!-- Estadísticas -->
+    <div class="estadisticas-grid">
+      <div class="stat-card">
+        <mat-icon>movie</mat-icon>
+        <div class="stat-info">
+          <h3>{{ estadisticas.totalPeliculas }}</h3>
+          <p>Películas</p>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <mat-icon>schedule</mat-icon>
+        <div class="stat-info">
+          <h3>{{ estadisticas.totalFunciones }}</h3>
+          <p>Funciones</p>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <mat-icon>room</mat-icon>
+        <div class="stat-info">
+          <h3>{{ estadisticas.totalSalas }}</h3>
+          <p>Salas</p>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <mat-icon>attach_money</mat-icon>
+        <div class="stat-info">
+          <h3>S/ {{ estadisticas.ventasHoy | number:'1.2-2' }}</h3>
+          <p>Ventas Hoy</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones rápidas -->
+    <div class="acciones-rapidas">
+      <h2>Acciones Rápidas</h2>
+      
+      <div class="acciones-grid">
+        <button mat-raised-button color="primary" (click)="sincronizarTMDb()" [disabled]="loading">
+          <mat-icon>sync</mat-icon>
+          Sincronizar con TMDb
+        </button>
+        
+        <button mat-raised-button color="accent" (click)="nuevaPelicula()">
+          <mat-icon>add</mat-icon>
+          Nueva Película
+        </button>
+        
+        <button mat-raised-button color="accent" (click)="nuevaFuncion()">
+          <mat-icon>schedule</mat-icon>
+          Nueva Función
+        </button>
+        
+        <button mat-raised-button color="accent" (click)="nuevaSala()">
+          <mat-icon>room</mat-icon>
+          Nueva Sala
+        </button>
+      </div>
+    </div>
+
+    <!-- Gestión -->
+    <div class="gestion-tabs">
+      <mat-tab-group>
+        <mat-tab label="Explorar TMDb">
+          <div class="tab-content">
+            <div class="tmdb-explorer">
+              <div class="tmdb-header">
+                <h3>Explorar Catálogo TMDb</h3>
+                <div class="tmdb-filters">
+                  <button mat-raised-button 
+                          [color]="tmdbCategoria === 'en-cartelera' ? 'primary' : 'basic'"
+                          (click)="explorarTMDb('en-cartelera')">
+                    En Cartelera
+                  </button>
+                  <button mat-raised-button 
+                          [color]="tmdbCategoria === 'proximamente' ? 'primary' : 'basic'"
+                          (click)="explorarTMDb('proximamente')">
+                    Próximamente
+                  </button>
+                  <button mat-raised-button 
+                          [color]="tmdbCategoria === 'populares' ? 'primary' : 'basic'"
+                          (click)="explorarTMDb('populares')">
+                    Populares
+                  </button>
+                </div>
+              </div>
+
+              <div *ngIf="tmdbLoading" class="loading-container">
+                <mat-spinner diameter="50"></mat-spinner>
+                <p>Cargando películas desde TMDb...</p>
+              </div>
+
+              <div *ngIf="!tmdbLoading && tmdbMovies.length > 0" class="tmdb-movies-grid">
+                <div *ngFor="let movie of tmdbMovies" class="tmdb-movie-card">
+                  <img [src]="getPosterUrl(movie.posterPath)" [alt]="movie.title" class="movie-poster">
+                  <div class="movie-info">
+                    <h4>{{ movie.title }}</h4>
+                    <p class="movie-overview">{{ movie.overview | slice:0:150 }}...</p>
+                    <div class="movie-details">
+                      <span><mat-icon>star</mat-icon> {{ movie.voteAverage.toFixed(1) }}</span>
+                      <span><mat-icon>calendar_today</mat-icon> {{ movie.releaseDate }}</span>
+                    </div>
+                    <button mat-raised-button color="primary" (click)="agregarPeliculaDesdeTMDb(movie)">
+                      <mat-icon>add</mat-icon>
+                      Agregar a BD
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="!tmdbLoading && tmdbMovies.length > 0" class="tmdb-pagination">
+                <button mat-button (click)="paginaAnteriorTMDb()" [disabled]="tmdbPage === 1">
+                  <mat-icon>chevron_left</mat-icon>
+                  Anterior
+                </button>
+                <span>Página {{ tmdbPage }}</span>
+                <button mat-button (click)="paginaSiguienteTMDb()">
+                  Siguiente
+                  <mat-icon>chevron_right</mat-icon>
+                </button>
+              </div>
+
+              <div *ngIf="!tmdbLoading && tmdbMovies.length === 0" class="no-data">
+                <mat-icon>movie</mat-icon>
+                <p>No hay películas disponibles. Haz clic en una categoría para explorar.</p>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+        
+        <mat-tab label="Películas">
+          <div class="tab-content">
+            <div class="salas-header">
+              <h3>Gestión de Películas</h3>
+              <button mat-raised-button color="primary" (click)="nuevaPelicula()">
+                <mat-icon>add</mat-icon>
+                Nueva Película
+              </button>
+            </div>
+
+            <!-- Formulario de Película -->
+            <div *ngIf="mostrarFormPelicula" class="sala-form-container">
+              <h4>{{ peliculaEditando ? 'Editar Película' : 'Nueva Película' }}</h4>
+              <form [formGroup]="peliculaForm" (ngSubmit)="guardarPelicula()">
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Título</mat-label>
+                    <input matInput formControlName="titulo" required>
+                    <mat-error *ngIf="peliculaForm.get('titulo')?.hasError('required')">
+                      El título es requerido
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Género</mat-label>
+                    <input matInput formControlName="genero">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Duración (minutos)</mat-label>
+                    <input matInput type="number" formControlName="duracion">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Clasificación</mat-label>
+                    <input matInput formControlName="clasificacion">
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>URL del Póster</mat-label>
+                    <input matInput formControlName="posterUrl">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>URL del Backdrop</mat-label>
+                    <input matInput formControlName="backdropUrl">
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Fecha de Estreno</mat-label>
+                    <input matInput type="date" formControlName="fechaEstreno">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Popularidad</mat-label>
+                    <input matInput type="number" formControlName="popularidad">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Voto Promedio</mat-label>
+                    <input matInput type="number" step="0.1" formControlName="votoPromedio">
+                  </mat-form-field>
+                </div>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Sinopsis</mat-label>
+                  <textarea matInput formControlName="sinopsis" rows="4"></textarea>
+                </mat-form-field>
+
+                <mat-checkbox formControlName="activa">Película Activa</mat-checkbox>
+
+                <div class="form-actions">
+                  <button mat-button type="button" (click)="cancelarFormPelicula()">Cancelar</button>
+                  <button mat-raised-button color="primary" type="submit" [disabled]="peliculaForm.invalid">
+                    {{ peliculaEditando ? 'Actualizar' : 'Crear' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Lista de Películas -->
+            <div class="salas-list">
+              <div *ngIf="peliculas.length === 0" class="no-data">
+                <mat-icon>movie</mat-icon>
+                <p>No hay películas registradas</p>
+              </div>
+
+              <div *ngFor="let pelicula of peliculas" class="sala-card">
+                <div class="sala-info">
+                  <div style="display: flex; gap: 15px; align-items: center;">
+                    <img *ngIf="pelicula.posterUrl" [src]="pelicula.posterUrl" [alt]="pelicula.titulo" 
+                         style="width: 60px; height: 90px; object-fit: cover; border-radius: 5px;">
+                    <div>
+                      <h4>{{ pelicula.titulo }}</h4>
+                      <div class="sala-details">
+                        <span *ngIf="pelicula.genero"><mat-icon>category</mat-icon> {{ pelicula.genero }}</span>
+                        <span *ngIf="pelicula.duracion"><mat-icon>schedule</mat-icon> {{ pelicula.duracion }} min</span>
+                        <span *ngIf="pelicula.votoPromedio"><mat-icon>star</mat-icon> {{ pelicula.votoPromedio.toFixed(1) }}</span>
+                        <span [class.activa]="pelicula.activa !== false" [class.inactiva]="pelicula.activa === false">
+                          <mat-icon>{{ pelicula.activa !== false ? 'check_circle' : 'cancel' }}</mat-icon>
+                          {{ pelicula.activa !== false ? 'Activa' : 'Inactiva' }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="sala-actions">
+                  <button mat-icon-button color="primary" (click)="editarPelicula(pelicula)" title="Editar">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="eliminarPelicula(pelicula)" title="Eliminar">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+        
+        <mat-tab label="Funciones">
+          <div class="tab-content">
+            <div class="salas-header">
+              <h3>Gestión de Funciones</h3>
+              <button mat-raised-button color="primary" (click)="nuevaFuncion()">
+                <mat-icon>add</mat-icon>
+                Nueva Función
+              </button>
+            </div>
+
+            <!-- Formulario de Función -->
+            <div *ngIf="mostrarFormFuncion" class="sala-form-container">
+              <h4>{{ funcionEditando ? 'Editar Función' : 'Nueva Función' }}</h4>
+              <form [formGroup]="funcionForm" (ngSubmit)="guardarFuncion()">
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Película</mat-label>
+                    <mat-select formControlName="peliculaId" required>
+                      <mat-option *ngFor="let pelicula of peliculas" [value]="pelicula.id">
+                        {{ pelicula.titulo }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="funcionForm.get('peliculaId')?.hasError('required')">
+                      La película es requerida
+                    </mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Sala</mat-label>
+                    <mat-select formControlName="salaId" required>
+                      <mat-option *ngFor="let sala of salas" [value]="sala.id">
+                        {{ sala.nombre }} (Cap: {{ sala.capacidad }})
+                      </mat-option>
+                    </mat-select>
+                    <mat-error *ngIf="funcionForm.get('salaId')?.hasError('required')">
+                      La sala es requerida
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Fecha y Hora</mat-label>
+                    <input matInput type="datetime-local" formControlName="fechaHora" required>
+                    <mat-error *ngIf="funcionForm.get('fechaHora')?.hasError('required')">
+                      La fecha y hora son requeridas
+                    </mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Precio (S/)</mat-label>
+                    <input matInput type="number" step="0.01" formControlName="precio" required>
+                    <mat-error *ngIf="funcionForm.get('precio')?.hasError('required')">
+                      El precio es requerido
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+
+                <mat-checkbox formControlName="activa">Función Activa</mat-checkbox>
+
+                <div class="form-actions">
+                  <button mat-button type="button" (click)="cancelarFormFuncion()">Cancelar</button>
+                  <button mat-raised-button color="primary" type="submit" [disabled]="funcionForm.invalid">
+                    {{ funcionEditando ? 'Actualizar' : 'Crear' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Lista de Funciones -->
+            <div class="salas-list">
+              <div *ngIf="funciones.length === 0" class="no-data">
+                <mat-icon>schedule</mat-icon>
+                <p>No hay funciones registradas</p>
+              </div>
+
+              <div *ngFor="let funcion of funciones" class="sala-card">
+                <div class="sala-info">
+                  <h4>{{ funcion.pelicula?.titulo || 'Sin película' }}</h4>
+                  <div class="sala-details">
+                    <span><mat-icon>room</mat-icon> {{ funcion.sala?.nombre || 'Sin sala' }}</span>
+                    <span><mat-icon>calendar_today</mat-icon> {{ formatearFecha(funcion.fechaHora) }}</span>
+                    <span><mat-icon>attach_money</mat-icon> S/ {{ funcion.precio | number:'1.2-2' }}</span>
+                    <span [class.activa]="funcion.activa !== false" [class.inactiva]="funcion.activa === false">
+                      <mat-icon>{{ funcion.activa !== false ? 'check_circle' : 'cancel' }}</mat-icon>
+                      {{ funcion.activa !== false ? 'Activa' : 'Inactiva' }}
+                    </span>
+                  </div>
+                </div>
+                <div class="sala-actions">
+                  <button mat-icon-button color="primary" (click)="editarFuncion(funcion)" title="Editar">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="eliminarFuncion(funcion)" title="Eliminar">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+        
+        <mat-tab label="Salas">
+          <div class="tab-content">
+            <div class="salas-header">
+              <h3>Gestión de Salas</h3>
+              <button mat-raised-button color="primary" (click)="nuevaSala()">
+                <mat-icon>add</mat-icon>
+                Nueva Sala
+              </button>
+            </div>
+
+            <!-- Formulario de Sala -->
+            <div *ngIf="mostrarFormSala" class="sala-form-container">
+              <h4>{{ salaEditando ? 'Editar Sala' : 'Nueva Sala' }}</h4>
+              <form [formGroup]="salaForm" (ngSubmit)="guardarSala()">
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Nombre</mat-label>
+                    <input matInput formControlName="nombre" required>
+                    <mat-error *ngIf="salaForm.get('nombre')?.hasError('required')">
+                      El nombre es requerido
+                    </mat-error>
+                    <mat-error *ngIf="salaForm.get('nombre')?.hasError('minlength')">
+                      El nombre debe tener al menos 3 caracteres
+                    </mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Capacidad</mat-label>
+                    <input matInput type="number" formControlName="capacidad" required>
+                    <mat-error *ngIf="salaForm.get('capacidad')?.hasError('required')">
+                      La capacidad es requerida
+                    </mat-error>
+                    <mat-error *ngIf="salaForm.get('capacidad')?.hasError('min')">
+                      La capacidad debe ser mayor a 0
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Tipo de Sala</mat-label>
+                    <mat-select formControlName="tipo" required>
+                      <mat-option *ngFor="let tipo of tiposSala" [value]="tipo">
+                        {{ obtenerTipoSalaLabel(tipo) }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-checkbox formControlName="activa">Sala Activa</mat-checkbox>
+                </div>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Descripción</mat-label>
+                  <textarea matInput formControlName="descripcion" rows="3"></textarea>
+                </mat-form-field>
+
+                <div class="form-actions">
+                  <button mat-button type="button" (click)="cancelarFormSala()">Cancelar</button>
+                  <button mat-raised-button color="primary" type="submit" [disabled]="salaForm.invalid">
+                    {{ salaEditando ? 'Actualizar' : 'Crear' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Lista de Salas -->
+            <div class="salas-list">
+              <div *ngIf="salas.length === 0" class="no-data">
+                <mat-icon>room</mat-icon>
+                <p>No hay salas registradas</p>
+              </div>
+
+              <div *ngFor="let sala of salas" class="sala-card">
+                <div class="sala-info">
+                  <h4>{{ sala.nombre }}</h4>
+                  <div class="sala-details">
+                    <span><mat-icon>people</mat-icon> Capacidad: {{ sala.capacidad }}</span>
+                    <span *ngIf="obtenerTipoSala(sala)"><mat-icon>category</mat-icon> Tipo: {{ obtenerTipoSalaLabel(obtenerTipoSala(sala)) }}</span>
+                    <span [class.activa]="sala.activa !== false" [class.inactiva]="sala.activa === false">
+                      <mat-icon>{{ sala.activa !== false ? 'check_circle' : 'cancel' }}</mat-icon>
+                      {{ sala.activa !== false ? 'Activa' : 'Inactiva' }}
+                    </span>
+                  </div>
+                  <p *ngIf="sala.descripcion" class="sala-descripcion">{{ sala.descripcion }}</p>
+                </div>
+                <div class="sala-actions">
+                  <button mat-icon-button color="primary" (click)="editarSala(sala)" title="Editar">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="eliminarSala(sala)" title="Eliminar">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+        
+        <mat-tab label="Reportes">
+          <div class="tab-content">
+            <p>Reportes y estadísticas - En desarrollo</p>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  </div>
+</div>
+
+
+
+

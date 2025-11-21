@@ -1,0 +1,89 @@
+<mat-toolbar class="header-toolbar">
+  <div class="header-content">
+    <!-- Logo -->
+    <div class="logo" routerLink="/home">
+      <mat-icon class="logo-icon">movie</mat-icon>
+      <span class="logo-text">CINERAMA</span>
+    </div>
+
+    <!-- Navegación Desktop -->
+    <nav class="nav-desktop">
+      <a mat-button routerLink="/home" routerLinkActive="active">Inicio</a>
+      <a mat-button routerLink="/peliculas" routerLinkActive="active">Películas</a>
+      <a mat-button routerLink="/funciones" routerLinkActive="active">Funciones</a>
+      <a mat-button routerLink="/nosotros" routerLinkActive="active">Nosotros</a>
+      <a mat-button routerLink="/contacto" routerLinkActive="active">Contacto</a>
+    </nav>
+
+    <!-- Acciones del usuario -->
+    <div class="user-actions">
+      <ng-container *ngIf="!isAuthenticated(); else authenticatedUser">
+        <button mat-button routerLink="/auth/login">Iniciar Sesión</button>
+        <button mat-raised-button color="primary" routerLink="/auth/registro">
+          Registrarse
+        </button>
+      </ng-container>
+
+      <ng-template #authenticatedUser>
+        <button mat-icon-button [matMenuTriggerFor]="userMenu" class="user-menu-button">
+          <mat-icon>account_circle</mat-icon>
+        </button>
+        
+        <mat-menu #userMenu="matMenu">
+          <div class="user-menu-header">
+            <p class="user-name">{{ currentUser?.username }}</p>
+            <p class="user-email">{{ currentUser?.email }}</p>
+          </div>
+          <mat-divider></mat-divider>
+          <button mat-menu-item routerLink="/perfil">
+            <mat-icon>person</mat-icon>
+            <span>Mi Perfil</span>
+          </button>
+          <button mat-menu-item (click)="navigateToCompras()">
+            <mat-icon>shopping_cart</mat-icon>
+            <span>Mis Compras</span>
+          </button>
+          <ng-container *ngIf="isAdmin()">
+            <mat-divider></mat-divider>
+            <button mat-menu-item routerLink="/admin">
+              <mat-icon>admin_panel_settings</mat-icon>
+              <span>Administración</span>
+            </button>
+          </ng-container>
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            <span>Cerrar Sesión</span>
+          </button>
+        </mat-menu>
+      </ng-template>
+
+      <!-- Botón de menú móvil -->
+      <button mat-icon-button (click)="toggleMenu()" class="mobile-menu-button">
+        <mat-icon>menu</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Navegación móvil -->
+  <div class="nav-mobile" [class.open]="isMenuOpen">
+    <a mat-button routerLink="/home" (click)="isMenuOpen = false">Inicio</a>
+    <a mat-button routerLink="/peliculas" (click)="isMenuOpen = false">Películas</a>
+    <a mat-button routerLink="/funciones" (click)="isMenuOpen = false">Funciones</a>
+    <a mat-button routerLink="/nosotros" (click)="isMenuOpen = false">Nosotros</a>
+    <a mat-button routerLink="/contacto" (click)="isMenuOpen = false">Contacto</a>
+    
+    <div class="mobile-user-actions" *ngIf="!isAuthenticated()">
+      <button mat-button routerLink="/auth/login" (click)="isMenuOpen = false">
+        Iniciar Sesión
+      </button>
+      <button mat-raised-button color="primary" routerLink="/auth/registro" (click)="isMenuOpen = false">
+        Registrarse
+      </button>
+    </div>
+  </div>
+</mat-toolbar>
+
+
+
+

@@ -1,0 +1,332 @@
+<div class="compra-container">
+  <!-- Header -->
+  <div class="compra-header">
+    <button mat-icon-button (click)="volverAPeliculas()" class="back-button">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1>Compra de Entradas</h1>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando información...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="error-container">
+    <mat-icon>error</mat-icon>
+    <h3>{{ error }}</h3>
+    <button mat-button (click)="volverAPeliculas()">Volver a Películas</button>
+  </div>
+
+  <!-- Contenido principal -->
+  <div *ngIf="!error" class="compra-content">
+    
+    <!-- Información de la función -->
+    <div class="funcion-info" *ngIf="funcion">
+      <div class="pelicula-poster" *ngIf="pelicula || funcion?.pelicula">
+        <img 
+          [src]="obtenerImagenPoster(pelicula || funcion?.pelicula)" 
+          [alt]="(pelicula || funcion?.pelicula)?.titulo"
+          class="poster-img">
+      </div>
+      
+      <div class="funcion-details">
+        <h2>{{ (pelicula || funcion?.pelicula)?.titulo || 'Película' }}</h2>
+        <div class="funcion-meta" *ngIf="funcion">
+          <span class="fecha">
+            <mat-icon>calendar_today</mat-icon>
+            {{ formatearFecha(funcion.fechaHora) }}
+          </span>
+          <span class="hora">
+            <mat-icon>access_time</mat-icon>
+            {{ formatearHora(funcion.fechaHora) }}
+          </span>
+          <span class="sala">
+            <mat-icon>room</mat-icon>
+            {{ funcion.sala?.nombre || 'Sala' }}
+          </span>
+          <span class="precio">
+            <mat-icon>attach_money</mat-icon>
+            S/ {{ funcion.precio | number:'1.2-2' }}
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Mensaje si no hay función -->
+    <div *ngIf="!funcion && !loading" class="no-funcion-message">
+      <mat-icon>error_outline</mat-icon>
+      <p>No se ha seleccionado una función. Por favor, selecciona un horario desde la página de la película.</p>
+      <button mat-raised-button color="primary" (click)="volverAPeliculas()">
+        <mat-icon>arrow_back</mat-icon>
+        Volver a Películas
+      </button>
+    </div>
+
+    <!-- Stepper -->
+    <mat-stepper #stepper [selectedIndex]="currentStep" class="compra-stepper" [linear]="false" *ngIf="funcion">
+      
+      <!-- Paso 1: Selección de Asientos -->
+      <mat-step label="Seleccionar Asientos" [completed]="asientosSeleccionados.length > 0">
+        <div class="step-content">
+          <h3>Selecciona tus asientos</h3>
+          <p *ngIf="asientosSeleccionados.length > 0" class="asientos-seleccionados-info">
+            Has seleccionado {{ asientosSeleccionados.length }} asiento(s)
+          </p>
+          
+          <!-- Loading de asientos -->
+          <div *ngIf="loading" class="loading-asientos">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Cargando mapa de asientos...</p>
+          </div>
+          
+          <!-- Mapa de asientos -->
+          <div class="asientos-container" *ngIf="!loading && funcion">
+            <div class="pantalla">
+              <mat-icon>tv</mat-icon>
+              <span>PANTALLA</span>
+            </div>
+            
+            <div class="asientos-grid" *ngIf="filas.length > 0">
+              <div *ngFor="let fila of filas" class="fila-asientos">
+                <div class="fila-label">{{ fila }}</div>
+                <div class="asientos-fila">
+                  <div *ngFor="let asiento of asientosPorFila[fila]" 
+                       [class]="obtenerClaseAsiento(asiento)"
+                       (click)="seleccionarAsiento(asiento)"
+                       [title]="'Asiento ' + asiento.fila + asiento.numero + (asiento.tipo === 'VIP' ? ' (VIP)' : '')">
+                    {{ asiento.numero }}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="filas.length === 0 && !loading" class="no-asientos">
+              <mat-icon>event_seat</mat-icon>
+              <p>No hay asientos disponibles para esta función</p>
+              <button mat-raised-button color="primary" (click)="cargarAsientos(funcion?.id!)" *ngIf="funcion?.id">
+                <mat-icon>refresh</mat-icon>
+                Reintentar
+              </button>
+            </div>
+            
+            <!-- Leyenda -->
+            <div class="asientos-leyenda">
+              <div class="leyenda-item">
+                <div class="seat available"></div>
+                <span>Disponible</span>
+              </div>
+              <div class="leyenda-item">
+                <div class="seat selected"></div>
+                <span>Seleccionado</span>
+              </div>
+              <div class="leyenda-item">
+                <div class="seat occupied"></div>
+                <span>Ocupado</span>
+              </div>
+              <div class="leyenda-item">
+                <div class="seat vip"></div>
+                <span>VIP</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Resumen de selección -->
+          <div *ngIf="asientosSeleccionados.length > 0" class="seleccion-resumen">
+            <h4>Asientos Seleccionados:</h4>
+            <div class="asientos-seleccionados">
+              <mat-chip *ngFor="let asiento of asientosSeleccionados" class="asiento-chip">
+                {{ asiento.fila }}{{ asiento.numero }}
+                <span *ngIf="asiento.tipo === 'VIP'"> (VIP)</span>
+              </mat-chip>
+            </div>
+            <div class="total-preliminar">
+              <strong>Total: S/ {{ calcularTotal() | number:'1.2-2' }}</strong>
+            </div>
+          </div>
+        </div>
+      </mat-step>
+
+      <!-- Paso 2: Datos de Compra -->
+      <mat-step label="Datos de Compra">
+        <div class="step-content">
+          <h3>Completa tus datos</h3>
+          
+          <form [formGroup]="compraForm" class="compra-form">
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Nombre Completo</mat-label>
+                <input matInput formControlName="nombre" placeholder="Tu nombre completo">
+                <mat-icon matSuffix>person</mat-icon>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Email</mat-label>
+                <input matInput type="email" formControlName="email" placeholder="tu@email.com">
+                <mat-icon matSuffix>email</mat-icon>
+              </mat-form-field>
+            </div>
+            
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Teléfono</mat-label>
+                <input matInput formControlName="telefono" placeholder="123456789">
+                <mat-icon matSuffix>phone</mat-icon>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Método de Pago</mat-label>
+                <mat-select formControlName="metodoPago">
+                  <mat-option *ngFor="let metodo of metodosPago" [value]="metodo.value">
+                    {{ metodo.label }}
+                  </mat-option>
+                </mat-select>
+                <mat-icon matSuffix>payment</mat-icon>
+              </mat-form-field>
+            </div>
+            
+            <div class="terminos-section">
+              <mat-checkbox formControlName="aceptarTerminos">
+                Acepto los <a href="#" class="terminos-link">términos y condiciones</a> de la compra
+              </mat-checkbox>
+            </div>
+          </form>
+        </div>
+      </mat-step>
+
+      <!-- Paso 3: Resumen y Confirmación -->
+      <mat-step label="Confirmar Compra">
+        <div class="step-content">
+          <h3>Resumen de tu Compra</h3>
+          
+          <div class="resumen-compra">
+            <div class="resumen-pelicula">
+              <h4>{{ (pelicula || funcion?.pelicula)?.titulo || 'Película' }}</h4>
+              <p>{{ formatearFecha(funcion.fechaHora) }} - {{ formatearHora(funcion.fechaHora) }}</p>
+              <p>{{ funcion.sala?.nombre || 'Sala' }}</p>
+            </div>
+            
+            <div class="resumen-asientos">
+              <h4>Asientos:</h4>
+              <div class="asientos-lista">
+                <div *ngFor="let asiento of asientosSeleccionados" class="asiento-item">
+                  <span>{{ asiento.fila }}{{ asiento.numero }}</span>
+                  <span *ngIf="asiento.tipo === 'VIP'"> (VIP)</span>
+                  <span class="precio">S/ {{ funcion.precio | number:'1.2-2' }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="resumen-total">
+              <div class="total-line">
+                <span>Subtotal:</span>
+                <span>S/ {{ calcularTotal() | number:'1.2-2' }}</span>
+              </div>
+              <div class="total-line">
+                <span>Servicio:</span>
+                <span>S/ 0.00</span>
+              </div>
+              <div class="total-line total-final">
+                <span><strong>Total:</strong></span>
+                <span><strong>S/ {{ calcularTotal() | number:'1.2-2' }}</strong></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-step>
+
+      <!-- Paso 4: Confirmación Final -->
+      <mat-step label="¡Compra Exitosa!">
+        <div class="step-content">
+          <div class="confirmacion-final" *ngIf="compraConfirmada">
+            <mat-icon class="success-icon">check_circle</mat-icon>
+            <h3>¡Compra Realizada Exitosamente!</h3>
+            <p>Tu compra ha sido procesada correctamente. Recibirás un email con los detalles de tus entradas.</p>
+            
+            <div class="boletos-info">
+              <h4>Detalles de tu Compra</h4>
+              <div class="confirmacion-details">
+                <div class="detail-item">
+                  <strong>Número de Confirmación:</strong>
+                  <span class="codigo-confirmacion">{{ compraConfirmada.codigoConfirmacion || compraConfirmada.numeroConfirmacion }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Película:</strong>
+                  <span>{{ compraConfirmada.pelicula?.titulo || (pelicula ? pelicula.titulo : '') }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Fecha y Hora:</strong>
+                  <span>{{ formatearFecha(compraConfirmada.funcion?.fechaHora || (funcion ? funcion.fechaHora : '')) }} - {{ formatearHora(compraConfirmada.funcion?.fechaHora || (funcion ? funcion.fechaHora : '')) }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Sala:</strong>
+                  <span>{{ compraConfirmada.funcion?.salaNombre || (funcion && funcion.sala ? funcion.sala.nombre : '') }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Asientos:</strong>
+                  <span>
+                    <span *ngFor="let boleto of compraConfirmada.boletos; let last = last">
+                      {{ boleto.codigoAsiento }}<span *ngIf="!last">, </span>
+                    </span>
+                  </span>
+                </div>
+                <div class="detail-item">
+                  <strong>Total Pagado:</strong>
+                  <span class="total-confirmacion">S/ {{ compraConfirmada.totalPagado || compraConfirmada.total | number:'1.2-2' }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Método de Pago:</strong>
+                  <span>{{ compraConfirmada.metodoPago }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="boletos-info">
+              <h4>Tus Boletos:</h4>
+              <div class="boleto-qr">
+                <div class="qr-code">
+                  <!-- Aquí iría el código QR -->
+                  <mat-icon>qr_code</mat-icon>
+                </div>
+                <p>Código de confirmación: {{ generarCodigoConfirmacion() }}</p>
+              </div>
+            </div>
+            
+            <div class="acciones-finales">
+              <button mat-raised-button color="primary" (click)="volverAPeliculas()">
+                <mat-icon>movie</mat-icon>
+                Ver Más Películas
+              </button>
+              <button mat-button (click)="volverAPeliculas()">
+                <mat-icon>home</mat-icon>
+                Ir al Inicio
+              </button>
+            </div>
+          </div>
+        </div>
+      </mat-step>
+    </mat-stepper>
+
+    <!-- Botones de navegación -->
+    <div class="stepper-actions" *ngIf="currentStep < 3">
+      <button mat-button (click)="pasoAnterior()" [disabled]="currentStep === 0">
+        <mat-icon>arrow_back</mat-icon>
+        Anterior
+      </button>
+      
+      <button mat-raised-button color="primary" (click)="currentStep === 2 ? confirmarCompra() : siguientePaso()" 
+              [disabled]="loading">
+        <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+        <span *ngIf="!loading">
+          {{ currentStep === 2 ? 'Confirmar Compra' : 'Siguiente' }}
+        </span>
+        <mat-icon *ngIf="!loading && currentStep !== 2">arrow_forward</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+

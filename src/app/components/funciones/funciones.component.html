@@ -1,0 +1,95 @@
+<div class="funciones-container">
+  <div class="funciones-header">
+    <h1 class="page-title">
+      <mat-icon>schedule</mat-icon>
+      Funciones
+    </h1>
+    
+    <div class="filtros">
+      <mat-form-field appearance="outline" class="filtro-field">
+        <mat-label>Película</mat-label>
+        <mat-select [(value)]="peliculaFiltro" (selectionChange)="onFiltroChange()">
+          <mat-option [value]="null">Todas las películas</mat-option>
+          <mat-option *ngFor="let pelicula of peliculas" [value]="pelicula.id">
+            {{ pelicula.titulo }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      
+      <mat-form-field appearance="outline" class="filtro-field">
+        <mat-label>Fecha</mat-label>
+        <input matInput [matDatepicker]="picker" [(ngModel)]="fechaFiltro" (dateChange)="onFiltroChange()">
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando funciones...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="error-container">
+    <mat-icon>error</mat-icon>
+    <h3>{{ error }}</h3>
+    <button mat-button (click)="cargarFunciones()">Reintentar</button>
+  </div>
+
+  <!-- Lista de funciones -->
+  <div *ngIf="!loading && !error" class="funciones-grid">
+    <div *ngFor="let funcion of funciones" class="funcion-card">
+      <div class="funcion-poster">
+        <p-image 
+          [src]="obtenerImagenPoster(funcion.pelicula)" 
+          [alt]="funcion.pelicula.titulo"
+          width="120px"
+          height="180px">
+        </p-image>
+      </div>
+      
+      <div class="funcion-info">
+        <h3>{{ funcion.pelicula.titulo }}</h3>
+        
+        <div class="funcion-details">
+          <div class="detail-item">
+            <mat-icon>schedule</mat-icon>
+            <span>{{ formatearHora(funcion.fechaHora) }}</span>
+          </div>
+          <div class="detail-item">
+            <mat-icon>calendar_today</mat-icon>
+            <span>{{ formatearFecha(funcion.fechaHora) }}</span>
+          </div>
+          <div class="detail-item">
+            <mat-icon>room</mat-icon>
+            <span>{{ funcion.sala.nombre }}</span>
+          </div>
+          <div class="detail-item">
+            <mat-icon>attach_money</mat-icon>
+            <span>S/ {{ funcion.precio | number:'1.2-2' }}</span>
+          </div>
+        </div>
+        
+        <div class="funcion-actions">
+          <button mat-raised-button color="primary" (click)="comprarEntrada(funcion)">
+            <mat-icon>shopping_cart</mat-icon>
+            Comprar Entrada
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No hay funciones -->
+  <div *ngIf="!loading && !error && funciones.length === 0" class="no-funciones">
+    <mat-icon>schedule</mat-icon>
+    <h3>No hay funciones disponibles</h3>
+    <p>Intenta ajustar los filtros de búsqueda</p>
+  </div>
+</div>
+
+
+
+

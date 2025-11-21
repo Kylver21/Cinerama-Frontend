@@ -1,0 +1,125 @@
+<div class="peliculas-container">
+  <!-- Header con búsqueda y filtros -->
+  <div class="peliculas-header">
+    <h1 class="page-title">
+      <mat-icon>movie</mat-icon>
+      Películas
+    </h1>
+    
+    <div class="search-filters">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Buscar películas...</mat-label>
+        <input matInput 
+               [formControl]="searchControl" 
+               placeholder="Escribe el título de la película">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+      
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Género</mat-label>
+        <mat-select [(value)]="selectedGenero" (selectionChange)="onGeneroChange()">
+          <mat-option value="">Todos los géneros</mat-option>
+          <mat-option *ngFor="let genero of generos" [value]="genero">
+            {{ genero }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      
+      <mat-form-field appearance="outline" class="sort-field">
+        <mat-label>Ordenar por</mat-label>
+        <mat-select [(value)]="sortBy" (selectionChange)="onSortChange()">
+          <mat-option *ngFor="let option of sortOptions" [value]="option.value">
+            {{ option.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      
+      <button mat-button color="warn" (click)="limpiarFiltros()" class="clear-filters">
+        <mat-icon>clear</mat-icon>
+        Limpiar
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando películas...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="error-container">
+    <mat-icon>error</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-button (click)="cargarPeliculas()">Reintentar</button>
+  </div>
+
+  <!-- Grid de películas -->
+  <div *ngIf="!loading && !error" class="peliculas-grid">
+    <div *ngFor="let pelicula of peliculas" class="pelicula-card" (click)="verDetalle(pelicula.id)">
+      <div class="pelicula-poster">
+        <img 
+          [src]="obtenerImagenPoster(pelicula)" 
+          [alt]="pelicula.titulo"
+          class="poster-image">
+        <div class="pelicula-overlay">
+          <button mat-icon-button class="play-button">
+            <mat-icon>play_arrow</mat-icon>
+          </button>
+        </div>
+        <div class="pelicula-rating">
+          <mat-icon>star</mat-icon>
+          <span>{{ pelicula.votoPromedio | number:'1.1-1' }}</span>
+        </div>
+      </div>
+      
+      <div class="pelicula-info">
+        <h3 class="pelicula-titulo">{{ pelicula.titulo }}</h3>
+        
+        <div class="pelicula-meta">
+          <span class="duracion">
+            <mat-icon>schedule</mat-icon>
+            {{ formatearDuracion(pelicula.duracion) }}
+          </span>
+          <span class="clasificacion">{{ pelicula.clasificacion }}</span>
+        </div>
+        
+        <div class="pelicula-generos">
+          <mat-chip *ngFor="let genero of obtenerGeneros(pelicula)" class="genero-chip">
+            {{ genero }}
+          </mat-chip>
+        </div>
+        
+        <p class="pelicula-sinopsis">{{ pelicula.sinopsis | slice:0:120 }}...</p>
+        
+        <button mat-raised-button color="primary" class="ver-detalle-btn">
+          Ver Detalles
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paginación -->
+  <mat-paginator 
+    *ngIf="!loading && !error && totalPages > 1"
+    [length]="totalElements"
+    [pageSize]="pageSize"
+    [pageIndex]="currentPage"
+    [pageSizeOptions]="[12, 24, 48]"
+    (page)="onPageChange($event)"
+    showFirstLastButtons
+    class="peliculas-paginator">
+  </mat-paginator>
+
+  <!-- Mensaje si no hay películas -->
+  <div *ngIf="!loading && !error && peliculas.length === 0" class="no-peliculas">
+    <mat-icon>movie_off</mat-icon>
+    <h3>No se encontraron películas</h3>
+    <p>Intenta ajustar los filtros de búsqueda</p>
+    <button mat-button (click)="limpiarFiltros()">Limpiar Filtros</button>
+  </div>
+</div>
+
+
+
+
