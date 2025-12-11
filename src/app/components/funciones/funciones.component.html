@@ -68,7 +68,7 @@
           </div>
           <div class="detail-item">
             <mat-icon>attach_money</mat-icon>
-            <span>S/ {{ funcion.precio | number:'1.2-2' }}</span>
+            <span>S/ {{ (funcion.precioEntrada || funcion.precio) | number:'1.2-2' }}</span>
           </div>
         </div>
         

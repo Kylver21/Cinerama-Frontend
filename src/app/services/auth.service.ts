@@ -45,7 +45,7 @@ export class AuthService {
 
   registro(data: RegistroRequest): Observable<any> {
     // El backend devuelve MensajeDTO directamente, no ApiResponse
-    // Enviar exactamente los campos que espera RegistroDTO
+    // Enviar exactamente los campos que espera RegistroDTO del backend
     const registroData = {
       username: data.username,
       email: data.email,
@@ -57,6 +57,7 @@ export class AuthService {
       tipoDocumento: data.tipoDocumento
     };
     
+    console.log('Enviando registro al backend:', registroData);
     return this.http.post<any>(`${this.apiUrl}/register`, registroData);
   }
 

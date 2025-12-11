@@ -168,19 +168,20 @@ export class CompraComponent implements OnInit, OnDestroy {
     this.loading = true;
     
     this.asientoService.obtenerAsientosPorFuncion(funcionId).subscribe({
-      next: (response) => {
-        console.log('Respuesta de asientos:', response);
-        if (response && response.success) {
-          this.asientos = response.data || [];
+      next: (asientos) => {
+        console.log('Respuesta de asientos:', asientos);
+        // El backend devuelve un array directamente, no ApiResponse
+        if (asientos && Array.isArray(asientos)) {
+          this.asientos = asientos;
           console.log('Asientos cargados:', this.asientos.length);
           
           if (this.asientos.length === 0) {
             console.warn('No hay asientos para esta función, se generarán automáticamente');
             // Intentar generar asientos automáticamente
             this.asientoService.generarAsientos(funcionId).subscribe({
-              next: (genResponse) => {
-                if (genResponse && genResponse.success) {
-                  this.asientos = genResponse.data || [];
+              next: (asientosGenerados) => {
+                if (asientosGenerados && Array.isArray(asientosGenerados)) {
+                  this.asientos = asientosGenerados;
                   console.log('Asientos generados:', this.asientos.length);
                   this.organizarAsientosPorFila();
                   this.loading = false;
@@ -215,14 +216,14 @@ export class CompraComponent implements OnInit, OnDestroy {
             }
           );
         } else {
-          console.warn('Respuesta sin éxito:', response);
-          this.error = response?.message || 'No se pudieron cargar los asientos';
+          console.warn('Respuesta inesperada:', asientos);
+          this.error = 'No se pudieron cargar los asientos';
           this.loading = false;
         }
       },
       error: (error) => {
         console.error('Error al cargar asientos:', error);
-        this.error = error.error?.message || error.message || 'Error al cargar asientos';
+        this.error = error.error?.message || error.error?.mensaje || error.message || 'Error al cargar asientos';
         this.loading = false;
       }
     });
@@ -264,25 +265,47 @@ export class CompraComponent implements OnInit, OnDestroy {
   }
 
   seleccionarAsiento(asiento: Asiento): void {
-    if (asiento.estado !== EstadoAsiento.DISPONIBLE) {
+    // Solo permitir seleccionar asientos disponibles o ya seleccionados por el usuario
+    if (asiento.estado !== EstadoAsiento.DISPONIBLE && !this.estaSeleccionado(asiento)) {
       return;
     }
 
     const index = this.asientosSeleccionados.findIndex(a => a.id === asiento.id);
     
     if (index > -1) {
-      // Deseleccionar asiento - liberar vía WebSocket
-      this.asientosSeleccionados.splice(index, 1);
-      if (this.funcion && this.funcion.id && asiento.id) {
-        this.webSocketService.liberarAsiento(asiento.id, this.funcion.id);
+      // Deseleccionar asiento - liberar vía HTTP
+      if (asiento.id) {
+        this.asientoService.liberarAsiento(asiento.id).subscribe({
+          next: (asientoLiberado) => {
+            console.log('Asiento liberado:', asientoLiberado);
+            // Actualizar estado local
+            asiento.estado = EstadoAsiento.DISPONIBLE;
+            this.asientosSeleccionados.splice(index, 1);
+          },
+          error: (error) => {
+            console.error('Error al liberar asiento:', error);
+            // Quitar de seleccionados de todas formas
+            this.asientosSeleccionados.splice(index, 1);
+          }
+        });
+      } else {
+        this.asientosSeleccionados.splice(index, 1);
       }
     } else {
-      // Seleccionar asiento - reservar vía WebSocket
-      this.asientosSeleccionados.push(asiento);
-      if (this.funcion && this.funcion.id && asiento.id) {
-        const currentUser = this.authService.getCurrentUser();
-        const clienteId = currentUser?.clienteId ?? currentUser?.userId;
-        this.webSocketService.reservarAsiento(asiento.id, this.funcion.id, clienteId);
+      // Seleccionar asiento - reservar vía HTTP
+      if (asiento.id) {
+        this.asientoService.reservarAsiento(asiento.id).subscribe({
+          next: (asientoReservado) => {
+            console.log('Asiento reservado:', asientoReservado);
+            // Actualizar estado local
+            asiento.estado = EstadoAsiento.RESERVADO;
+            this.asientosSeleccionados.push(asiento);
+          },
+          error: (error) => {
+            console.error('Error al reservar asiento:', error);
+            this.error = error.error?.mensaje || 'No se pudo reservar el asiento. Puede que ya esté ocupado.';
+          }
+        });
       }
     }
   }
@@ -300,8 +323,8 @@ export class CompraComponent implements OnInit, OnDestroy {
     } else if (asiento.estado === EstadoAsiento.OCUPADO) {
       clase += ' occupied';
     } else if (asiento.estado === EstadoAsiento.RESERVADO) {
-      // Si está reservado por otro usuario, mostrarlo como ocupado
-      clase += ' occupied';
+      // Si está reservado por otro usuario (no seleccionado por nosotros), mostrarlo como ocupado
+      clase += ' reserved';
     } else {
       clase += ' available';
     }
@@ -315,7 +338,9 @@ export class CompraComponent implements OnInit, OnDestroy {
 
   calcularTotal(): number {
     if (!this.funcion) return 0;
-    return this.asientosSeleccionados.length * this.funcion.precio;
+    // El backend usa precioEntrada, no precio
+    const precio = this.funcion.precioEntrada || this.funcion.precio || 0;
+    return this.asientosSeleccionados.length * precio;
   }
 
   siguientePaso(): void {
@@ -372,14 +397,30 @@ export class CompraComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Obtener clienteId del usuario autenticado
+    const currentUser = this.authService.getCurrentUser();
+    console.log('Usuario actual:', currentUser);
+    
+    // El backend requiere clienteId - intentar obtenerlo del usuario
+    const clienteId = currentUser?.clienteId;
+    
+    if (!clienteId) {
+      console.error('No se encontró clienteId en el usuario:', currentUser);
+      this.error = 'No se pudo obtener la información del cliente. Por favor, cierra sesión e inicia sesión nuevamente.';
+      this.loading = false;
+      return;
+    }
+
     // Preparar request para el orquestador
     const confirmarRequest = {
+      clienteId: clienteId,
       funcionId: funcionId,
       asientoIds: asientoIds,
       productos: [], // TODO: Agregar productos si se implementa
-      metodoPago: this.compraForm.value.metodoPago,
-      tipoComprobante: 'BOLETA' // TODO: Permitir seleccionar
+      metodoPago: this.compraForm.value.metodoPago
     };
+    
+    console.log('Enviando request de compra:', confirmarRequest);
 
     // Usar el servicio de compra (orquestador)
     this.compraService.confirmarCompra(confirmarRequest).subscribe({
@@ -450,15 +491,20 @@ export class CompraComponent implements OnInit, OnDestroy {
     if (this.asientoUpdateSubscription) {
       this.asientoUpdateSubscription.unsubscribe();
     }
-    // Desconectar WebSocket cuando se sale del componente
-    if (this.funcion && this.funcion.id) {
-      // Liberar todos los asientos seleccionados al salir
+    
+    // Liberar todos los asientos seleccionados al salir (si no se confirmó la compra)
+    if (this.currentStep < 3 && this.asientosSeleccionados.length > 0) {
       this.asientosSeleccionados.forEach(asiento => {
-        if (asiento.id && this.funcion?.id) {
-          this.webSocketService.liberarAsiento(asiento.id, this.funcion.id);
+        if (asiento.id) {
+          // Liberar via HTTP (fire and forget)
+          this.asientoService.liberarAsiento(asiento.id).subscribe({
+            next: () => console.log('Asiento liberado al salir:', asiento.id),
+            error: (err) => console.error('Error al liberar asiento:', err)
+          });
         }
       });
     }
+    
     this.webSocketService.disconnect();
   }
 }

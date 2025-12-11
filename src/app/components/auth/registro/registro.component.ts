@@ -68,8 +68,11 @@ export class RegistroComponent implements OnInit {
         tipoDocumento: this.registroForm.value.tipoDocumento
       };
 
+      console.log('Enviando datos de registro:', registroData);
+      
       this.authService.registro(registroData).subscribe({
         next: (response) => {
+          console.log('Respuesta del backend:', response);
           // El backend devuelve MensajeDTO directamente, no ApiResponse
           if (response && (response as any).exitoso) {
             this.snackBar.open('¡Registro exitoso! Ya puedes iniciar sesión.', 'Cerrar', {
@@ -87,10 +90,13 @@ export class RegistroComponent implements OnInit {
           this.loading = false;
         },
         error: (error) => {
+          console.error('Error en registro:', error);
           // El backend devuelve MensajeDTO en caso de error
           let errorMessage = 'Error al registrarse';
           
-          if (error.error) {
+          if (error.status === 0) {
+            errorMessage = 'No se puede conectar al servidor. Verifica que el backend esté corriendo.';
+          } else if (error.error) {
             errorMessage = error.error.mensaje || error.error.message || errorMessage;
           } else if (error.message) {
             errorMessage = error.message;

@@ -1,0 +1,102 @@
+<div class="usuarios-container">
+  <div class="header">
+    <h2>Gestión de Usuarios/Empleados</h2>
+    <button mat-raised-button color="primary" (click)="nuevoUsuario()" class="new-btn">
+      <mat-icon>add_circle</mat-icon>
+      Nuevo Usuario
+    </button>
+  </div>
+
+  <!-- Formulario -->
+  <mat-card *ngIf="mostrarFormUsuario" class="form-card">
+    <mat-card-header>
+      <mat-card-title>{{ usuarioEditando ? 'Editar Usuario' : 'Crear Nuevo Usuario' }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="usuarioForm" class="form-grid">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nombre Completo</mat-label>
+          <input matInput formControlName="nombre" placeholder="Ej: Juan Pérez">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Correo Electrónico</mat-label>
+          <input matInput type="email" formControlName="email" placeholder="usuario@cinerama.com">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Rol</mat-label>
+          <mat-select formControlName="rol">
+            <mat-option value="Administrador">Administrador</mat-option>
+            <mat-option value="Supervisor">Supervisor</mat-option>
+            <mat-option value="Cajero">Cajero</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="checkbox-group full-width">
+          <mat-slide-toggle formControlName="estado">Usuario Activo</mat-slide-toggle>
+        </div>
+
+        <div class="form-actions full-width">
+          <button mat-raised-button color="primary" (click)="guardarUsuario()">
+            {{ usuarioEditando ? 'Actualizar' : 'Crear' }}
+          </button>
+          <button mat-stroked-button (click)="cancelarFormUsuario()">Cancelar</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Usuarios Table -->
+  <mat-card *ngIf="!loadingUsuarios" class="table-card">
+    <mat-table [dataSource]="usuarios" class="usuarios-table">
+      <!-- Nombre Column -->
+      <ng-container matColumnDef="nombre">
+        <mat-header-cell *matHeaderCellDef>Nombre</mat-header-cell>
+        <mat-cell *matCellDef="let element">{{ element.nombre }}</mat-cell>
+      </ng-container>
+
+      <!-- Email Column -->
+      <ng-container matColumnDef="email">
+        <mat-header-cell *matHeaderCellDef>Correo</mat-header-cell>
+        <mat-cell *matCellDef="let element">{{ element.email }}</mat-cell>
+      </ng-container>
+
+      <!-- Rol Column -->
+      <ng-container matColumnDef="rol">
+        <mat-header-cell *matHeaderCellDef>Rol</mat-header-cell>
+        <mat-cell *matCellDef="let element">
+          <span class="rol-badge" [style.background-color]="getRolColor(element.rol)">
+            {{ element.rol }}
+          </span>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Estado Column -->
+      <ng-container matColumnDef="estado">
+        <mat-header-cell *matHeaderCellDef>Estado</mat-header-cell>
+        <mat-cell *matCellDef="let element">
+          <span class="estado-badge" [ngClass]="element.estado ? 'activo' : 'inactivo'">
+            {{ element.estado ? 'Activo' : 'Inactivo' }}
+          </span>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Acciones Column -->
+      <ng-container matColumnDef="acciones">
+        <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+        <mat-cell *matCellDef="let element" class="acciones-cell">
+          <button mat-icon-button matTooltip="Editar" (click)="editarUsuario(element)">
+            <mat-icon class="icon-edit">edit</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Eliminar" (click)="eliminarUsuario(element)">
+            <mat-icon class="icon-delete">delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+  </mat-card>
+</div>

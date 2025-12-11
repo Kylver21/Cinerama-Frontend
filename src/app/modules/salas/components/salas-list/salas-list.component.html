@@ -1,0 +1,110 @@
+<div class="salas-container">
+  <div class="header">
+    <h2>Gestión de Salas</h2>
+    <button mat-raised-button color="primary" (click)="nuevaSala()" class="new-btn">
+      <mat-icon>add_circle</mat-icon>
+      Nueva Sala
+    </button>
+  </div>
+
+  <!-- Formulario -->
+  <mat-card *ngIf="mostrarFormSala" class="form-card">
+    <mat-card-header>
+      <mat-card-title>{{ salaEditando ? 'Editar Sala' : 'Crear Nueva Sala' }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="salaForm" class="form-grid">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nombre de la Sala</mat-label>
+          <input matInput formControlName="nombre" placeholder="Ej: Sala A, Sala 1">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Tipo de Sala</mat-label>
+          <mat-select formControlName="tipo">
+            <mat-option value="2D">2D</mat-option>
+            <mat-option value="3D">3D</mat-option>
+            <mat-option value="VIP">VIP</mat-option>
+            <mat-option value="IMAX">IMAX</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Capacidad (asientos)</mat-label>
+          <input matInput type="number" formControlName="capacidad" placeholder="100">
+        </mat-form-field>
+
+        <div class="checkbox-group full-width">
+          <mat-checkbox formControlName="activa">Sala Activa</mat-checkbox>
+        </div>
+
+        <div class="form-actions full-width">
+          <button mat-raised-button color="primary" (click)="guardarSala()">
+            {{ salaEditando ? 'Actualizar' : 'Crear' }}
+          </button>
+          <button mat-stroked-button (click)="cancelarFormSala()">Cancelar</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading -->
+  <div *ngIf="loadingSalas" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Cargando salas...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loadingSalas && salas.length === 0" class="empty-state">
+    <mat-icon>event_seat</mat-icon>
+    <p>No hay salas registradas</p>
+  </div>
+
+  <!-- Salas Table -->
+  <mat-card *ngIf="!loadingSalas && salas.length > 0" class="table-card">
+    <mat-table [dataSource]="salas" class="salas-table">
+      <!-- Nombre Column -->
+      <ng-container matColumnDef="nombre">
+        <mat-header-cell *matHeaderCellDef>Nombre</mat-header-cell>
+        <mat-cell *matCellDef="let element">{{ element.nombre }}</mat-cell>
+      </ng-container>
+
+      <!-- Tipo Column -->
+      <ng-container matColumnDef="tipo">
+        <mat-header-cell *matHeaderCellDef>Tipo</mat-header-cell>
+        <mat-cell *matCellDef="let element">
+          <span class="tipo-badge" [ngClass]="element.tipo.toLowerCase()">
+            {{ getTipoSalaLabel(element.tipo) }}
+          </span>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Capacidad Column -->
+      <ng-container matColumnDef="capacidad">
+        <mat-header-cell *matHeaderCellDef>Capacidad</mat-header-cell>
+        <mat-cell *matCellDef="let element">
+          <span class="capacidad-badge">
+            <mat-icon>event_seat</mat-icon>
+            {{ element.capacidad }} asientos
+          </span>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Acciones Column -->
+      <ng-container matColumnDef="acciones">
+        <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+        <mat-cell *matCellDef="let element" class="acciones-cell">
+          <button mat-icon-button matTooltip="Editar" (click)="editarSala(element)">
+            <mat-icon class="icon-edit">edit</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Eliminar" (click)="eliminarSala(element)">
+            <mat-icon class="icon-delete">delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+  </mat-card>
+</div>

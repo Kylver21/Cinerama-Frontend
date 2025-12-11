@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { CanActivate, Router, ActivatedRouteSnapshot } from '@angular/router';
+import { CanActivate, Router, ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -12,13 +13,17 @@ export class AuthGuard implements CanActivate {
     private router: Router
   ) {}
 
-  canActivate(route: ActivatedRouteSnapshot): boolean {
+  canActivate(
+    route: ActivatedRouteSnapshot,
+    state: RouterStateSnapshot
+  ): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
+    
     if (!this.authService.isAuthenticated()) {
       // Redirigir al login con returnUrl para que después del login vuelva a la página solicitada
-      const returnUrl = route.url.map(u => u.path).join('/');
+      const returnUrl = state.url;
       this.router.navigate(['/auth/login'], {
         queryParams: { 
-          returnUrl: returnUrl ? `/${returnUrl}` : '/compra',
+          returnUrl: returnUrl,
           message: 'Debes iniciar sesión para acceder a esta página'
         }
       });

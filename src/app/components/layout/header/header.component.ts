@@ -42,12 +42,20 @@ export class HeaderComponent implements OnInit {
 
   navigateToCompras(): void {
     if (this.isAuthenticated()) {
-      this.router.navigate(['/compra']);
+      // Navegar a la sección "Mis Compras" en el perfil
+      this.router.navigate(['/perfil'], { 
+        queryParams: { tab: 'compras' } 
+      });
     } else {
       this.router.navigate(['/auth/login'], {
-        queryParams: { returnUrl: '/compra', message: 'Debes iniciar sesión para ver tus compras' }
+        queryParams: { returnUrl: '/perfil', message: 'Debes iniciar sesión para ver tus compras' }
       });
     }
+  }
+
+  goToAdmin(): void {
+    // Navegar al dashboard de admin integrado
+    this.router.navigate(['/admin']);
   }
 }
 

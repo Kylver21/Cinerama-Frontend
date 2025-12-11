@@ -1,0 +1,103 @@
+<div class="login-container">
+  <div class="login-card">
+    <!-- Logo -->
+    <div class="logo-section">
+      <div class="logo">
+        <mat-icon>movie</mat-icon>
+      </div>
+      <h1>Cinerama Admin</h1>
+      <p>Panel de Administración</p>
+    </div>
+
+    <!-- Formulario -->
+    <form [formGroup]="loginForm" (ngSubmit)="login()" class="login-form">
+      <!-- Error Message -->
+      <div *ngIf="loginError" class="error-message">
+        <mat-icon>error</mat-icon>
+        <span>{{ loginError }}</span>
+      </div>
+
+      <!-- Username Field -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Usuario</mat-label>
+        <input 
+          matInput 
+          type="text"
+          formControlName="username"
+          [disabled]="loading"
+          placeholder="admin">
+        <mat-icon matSuffix>person</mat-icon>
+        <mat-error *ngIf="loginForm.get('username')?.hasError('required')">
+          El usuario es requerido
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Password Field -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Contraseña</mat-label>
+        <input 
+          matInput 
+          [type]="hidePassword ? 'password' : 'text'"
+          formControlName="password"
+          [disabled]="loading"
+          placeholder="••••••">
+        <button 
+          mat-icon-button 
+          matSuffix 
+          (click)="togglePasswordVisibility()"
+          type="button"
+          [disabled]="loading">
+          <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+          La contraseña es requerida
+        </mat-error>
+        <mat-error *ngIf="loginForm.get('password')?.hasError('minlength')">
+          Mínimo 6 caracteres
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Remember Me -->
+      <div class="checkbox-row">
+        <mat-checkbox formControlName="rememberMe" [disabled]="loading">
+          Recuerda mi sesión
+        </mat-checkbox>
+        <a href="#" class="forgot-password">¿Olvidaste la contraseña?</a>
+      </div>
+
+      <!-- Submit Button -->
+      <button 
+        mat-raised-button 
+        color="primary" 
+        type="submit" 
+        [disabled]="loginForm.invalid || loading"
+        class="login-button">
+        <mat-icon *ngIf="!loading">login</mat-icon>
+        <mat-spinner *ngIf="loading" diameter="20" style="margin-right: 10px;"></mat-spinner>
+        {{ loading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
+      </button>
+
+      <!-- Demo Info -->
+      <div class="demo-info">
+        <p>Credenciales de Demo:</p>
+        <small>Usuario: <strong>admin</strong></small>
+        <small>Contraseña: <strong>Admin123!</strong></small>
+        <button mat-button (click)="useDemoCredentials()" type="button" [disabled]="loading">
+          Usar Credenciales de Demo
+        </button>
+      </div>
+    </form>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <p>© 2025 Cinerama. Sistema de Administración. Todos los derechos reservados.</p>
+    </div>
+  </div>
+
+  <!-- Background Decoration -->
+  <div class="background-decoration">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+  </div>
+</div>

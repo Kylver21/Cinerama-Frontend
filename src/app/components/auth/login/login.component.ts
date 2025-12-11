@@ -44,8 +44,11 @@ export class LoginComponent implements OnInit {
         password: this.loginForm.value.password
       };
 
+      console.log('Enviando login:', credentials);
+      
       this.authService.login(credentials).subscribe({
         next: (response) => {
+          console.log('Respuesta del backend:', response);
           // El backend devuelve LoginResponseDTO directamente en caso de éxito
           if (response && response.token) {
             this.snackBar.open('¡Inicio de sesión exitoso!', 'Cerrar', {
@@ -60,6 +63,7 @@ export class LoginComponent implements OnInit {
             
             // Redirigir según el rol o returnUrl
             if (this.authService.isAdmin()) {
+              // Administrador: ir al panel integrado
               this.router.navigate(['/admin']);
             } else if (returnUrl && returnUrl !== '/home') {
               // Si hay returnUrl, redirigir allí (ej: después de intentar comprar)
@@ -81,10 +85,13 @@ export class LoginComponent implements OnInit {
           this.loading = false;
         },
         error: (error) => {
+          console.error('Error en login:', error);
           // El backend devuelve MensajeDTO en caso de error (401, 500, etc.)
           let errorMessage = 'Error al iniciar sesión';
           
-          if (error.error) {
+          if (error.status === 0) {
+            errorMessage = 'No se puede conectar al servidor. Verifica que el backend esté corriendo.';
+          } else if (error.error) {
             // El backend puede devolver MensajeDTO con campo "mensaje"
             errorMessage = error.error.mensaje || error.error.message || errorMessage;
           } else if (error.message) {

@@ -1,0 +1,128 @@
+<div class="productos-container">
+  <div class="header">
+    <h2>Gestión de Productos</h2>
+    <button mat-raised-button color="primary" (click)="nuevoProducto()" class="new-btn">
+      <mat-icon>add_circle</mat-icon>
+      Nuevo Producto
+    </button>
+  </div>
+
+  <!-- Formulario -->
+  <mat-card *ngIf="mostrarFormProducto" class="form-card">
+    <mat-card-header>
+      <mat-card-title>{{ productoEditando ? 'Editar Producto' : 'Crear Nuevo Producto' }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="productoForm" class="form-grid">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="nombre" placeholder="Ej: Coca Cola">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Categoría</mat-label>
+          <mat-select formControlName="categoria">
+            <mat-option value="Bebidas">Bebidas</mat-option>
+            <mat-option value="Snacks">Snacks</mat-option>
+            <mat-option value="Chocolate">Chocolate</mat-option>
+            <mat-option value="Dulces">Dulces</mat-option>
+            <mat-option value="Palomitas">Palomitas</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Precio (S/)</mat-label>
+          <input matInput type="number" step="0.01" formControlName="precio" placeholder="5.00">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Stock</mat-label>
+          <input matInput type="number" formControlName="stock" placeholder="100">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Descripción (Opcional)</mat-label>
+          <textarea matInput formControlName="descripcion" rows="3" placeholder="Descripción del producto..."></textarea>
+        </mat-form-field>
+
+        <div class="checkbox-group full-width">
+          <mat-checkbox formControlName="activo">Producto Activo</mat-checkbox>
+        </div>
+
+        <div class="form-actions full-width">
+          <button mat-raised-button color="primary" (click)="guardarProducto()">
+            {{ productoEditando ? 'Actualizar' : 'Crear' }}
+          </button>
+          <button mat-stroked-button (click)="cancelarFormProducto()">Cancelar</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading -->
+  <div *ngIf="loadingProductos" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Cargando productos...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loadingProductos && productos.length === 0" class="empty-state">
+    <mat-icon>shopping_cart</mat-icon>
+    <p>No hay productos registrados</p>
+  </div>
+
+  <!-- Productos Table -->
+  <mat-card *ngIf="!loadingProductos && productos.length > 0" class="table-card">
+    <mat-table [dataSource]="productos" class="productos-table">
+      <!-- Nombre Column -->
+      <ng-container matColumnDef="nombre">
+        <mat-header-cell *matHeaderCellDef>Nombre</mat-header-cell>
+        <mat-cell *matCellDef="let element">{{ element.nombre }}</mat-cell>
+      </ng-container>
+
+      <!-- Categoría Column -->
+      <ng-container matColumnDef="categoria">
+        <mat-header-cell *matHeaderCellDef>Categoría</mat-header-cell>
+        <mat-cell *matCellDef="let element">
+          <span class="categoria-badge" [style.background-color]="getCategoriaColor(element.categoria)">
+            {{ element.categoria }}
+          </span>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Precio Column -->
+      <ng-container matColumnDef="precio">
+        <mat-header-cell *matHeaderCellDef>Precio</mat-header-cell>
+        <mat-cell *matCellDef="let element">
+          <span class="precio-badge">S/ {{ element.precio | number: '1.2-2' }}</span>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Stock Column -->
+      <ng-container matColumnDef="stock">
+        <mat-header-cell *matHeaderCellDef>Stock</mat-header-cell>
+        <mat-cell *matCellDef="let element">
+          <span class="stock-badge" [ngClass]="element.stock > 20 ? 'alto' : element.stock > 5 ? 'medio' : 'bajo'">
+            {{ element.stock }} unidades
+          </span>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Acciones Column -->
+      <ng-container matColumnDef="acciones">
+        <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+        <mat-cell *matCellDef="let element" class="acciones-cell">
+          <button mat-icon-button matTooltip="Editar" (click)="editarProducto(element)">
+            <mat-icon class="icon-edit">edit</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Eliminar" (click)="eliminarProducto(element)">
+            <mat-icon class="icon-delete">delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+  </mat-card>
+</div>

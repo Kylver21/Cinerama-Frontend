@@ -1,0 +1,671 @@
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo-section">
+      <div class="logo">
+        <mat-icon>🎬</mat-icon>
+      </div>
+      <h2>Cinerama</h2>
+      <p class="subtitle">Panel Admin</p>
+    </div>
+
+    <nav class="nav-menu">
+      <button class="nav-item" [class.active]="activeSection==='dashboard'" (click)="navigateSection('dashboard')">
+        <mat-icon>dashboard</mat-icon>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-item" [class.active]="activeSection==='funciones'" (click)="navigateSection('funciones')">
+        <mat-icon>schedule</mat-icon>
+        <span>Funciones</span>
+      </button>
+      <button class="nav-item" [class.active]="activeSection==='peliculas'" (click)="navigateSection('peliculas')">
+        <mat-icon>movie</mat-icon>
+        <span>Películas</span>
+      </button>
+      <button class="nav-item" [class.active]="activeSection==='salas'" (click)="navigateSection('salas')">
+        <mat-icon>meeting_room</mat-icon>
+        <span>Salas</span>
+      </button>
+      <button class="nav-item" [class.active]="activeSection==='productos'" (click)="navigateSection('productos')">
+        <mat-icon>local_mall</mat-icon>
+        <span>Productos</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-badge">
+        <mat-icon>account_circle</mat-icon>
+        <div class="user-badge-text">
+          <p class="user-label">Admin</p>
+          <p class="user-email">{{ adminEmail }}</p>
+        </div>
+      </div>
+      <button mat-button class="logout-btn" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <h1>Panel de Administración</h1>
+        <p class="header-subtitle">Gestión de contenido y operaciones</p>
+      </div>
+      <div class="header-right">
+        <button mat-stroked-button color="primary" (click)="volverAlHome()">
+          <mat-icon>home</mat-icon>
+          Volver al Home
+        </button>
+        <button mat-icon-button class="icon-btn" matTooltip="Notificaciones">
+          <mat-icon>notifications</mat-icon>
+        </button>
+        <button mat-icon-button class="icon-btn" matTooltip="Configuración">
+          <mat-icon>settings</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+      <div class="content">
+        <div class="content-shell">
+      <section id="dashboard">
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card stat-card-1">
+            <div class="stat-card-inner">
+              <div class="stat-icon">
+                <mat-icon>movie</mat-icon>
+              </div>
+              <div class="stat-info">
+                <p class="stat-label">Películas</p>
+                <h3 class="stat-number">{{ estadisticas.totalPeliculas }}</h3>
+              </div>
+            </div>
+            <div class="stat-chart"></div>
+          </div>
+
+          <div class="stat-card stat-card-2">
+            <div class="stat-card-inner">
+              <div class="stat-icon">
+                <mat-icon>schedule</mat-icon>
+              </div>
+              <div class="stat-info">
+                <p class="stat-label">Funciones</p>
+                <h3 class="stat-number">{{ estadisticas.totalFunciones }}</h3>
+              </div>
+            </div>
+            <div class="stat-chart"></div>
+          </div>
+
+          <div class="stat-card stat-card-3">
+            <div class="stat-card-inner">
+              <div class="stat-icon">
+                <mat-icon>meeting_room</mat-icon>
+              </div>
+              <div class="stat-info">
+                <p class="stat-label">Salas</p>
+                <h3 class="stat-number">{{ estadisticas.totalSalas }}</h3>
+              </div>
+            </div>
+            <div class="stat-chart"></div>
+          </div>
+
+          <div class="stat-card stat-card-4">
+            <div class="stat-card-inner">
+              <div class="stat-icon">
+                <mat-icon>local_mall</mat-icon>
+              </div>
+              <div class="stat-info">
+                <p class="stat-label">Productos</p>
+                <h3 class="stat-number">{{ estadisticas.totalProductos }}</h3>
+              </div>
+            </div>
+            <div class="stat-chart"></div>
+          </div>
+        </div>
+
+        <!-- Insights -->
+        <div class="insights-grid">
+        <div class="insight-card">
+          <div class="section-header compact">
+            <div>
+              <h3><mat-icon>bar_chart</mat-icon> Top Funciones</h3>
+              <p class="section-subtitle">Más vendidas por boletos</p>
+            </div>
+          </div>
+          <mat-spinner *ngIf="loadingStats" diameter="32"></mat-spinner>
+          <div *ngIf="!loadingStats && topFunciones.length === 0" class="empty-state small">
+            <mat-icon>schedule</mat-icon>
+            <p>Aún no hay ventas registradas</p>
+          </div>
+          <div class="insight-list" *ngIf="!loadingStats && topFunciones.length > 0">
+            <div class="insight-item" *ngFor="let top of topFunciones; let idx = index">
+              <div class="badge">#{{ idx + 1 }}</div>
+              <div class="insight-info">
+                <p class="title">{{ top.titulo }}</p>
+                <p class="meta">{{ top.sala }} · {{ formatearFecha(top.proximaFecha || '') }}</p>
+              </div>
+              <div class="insight-values">
+                <span class="pill">{{ top.totalBoletos }} boletos</span>
+                <strong>{{ formatearMoneda(top.totalIngresos) }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="insight-card">
+          <div class="section-header compact">
+            <div>
+              <h3><mat-icon>shopping_bag</mat-icon> Top Productos</h3>
+              <p class="section-subtitle">Combos más vendidos</p>
+            </div>
+          </div>
+          <mat-spinner *ngIf="loadingStats" diameter="32"></mat-spinner>
+          <div *ngIf="!loadingStats && topProductos.length === 0" class="empty-state small">
+            <mat-icon>shopping_bag</mat-icon>
+            <p>Sin ventas de productos aún</p>
+          </div>
+          <div class="insight-list" *ngIf="!loadingStats && topProductos.length > 0">
+            <div class="insight-item" *ngFor="let top of topProductos; let idx = index">
+              <div class="badge badge-green">#{{ idx + 1 }}</div>
+              <div class="insight-info">
+                <p class="title">{{ top.nombre }}</p>
+                <p class="meta">{{ top.categoria }}</p>
+              </div>
+              <div class="insight-values">
+                <span class="pill">{{ top.totalVendidos }} uds</span>
+                <strong>{{ formatearMoneda(top.totalIngresos) }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <!-- Main Section with Tabs -->
+      <div class="main-section" id="tabsAnchor">
+        <div class="sticky-tabs">
+          <mat-tab-group [selectedIndex]="tabIndex" (selectedIndexChange)="onTabChange($event)">
+          <!-- Funciones Tab -->
+          <mat-tab label="Gestión de Funciones">
+            <ng-template mat-tab-label>
+              <mat-icon class="tab-icon">schedule</mat-icon>
+              <span class="tab-label">Funciones</span>
+            </ng-template>
+            <div class="tab-content">
+              <div class="section-header">
+                <div>
+                  <h2><mat-icon>schedule</mat-icon> Gestión de Funciones</h2>
+                  <p class="section-subtitle">Crea y administra las funciones de películas</p>
+                </div>
+                <div class="filters-row">
+                  <mat-form-field appearance="outline" class="filter-field">
+                    <mat-label>Ordenar por fecha</mat-label>
+                    <mat-select [(value)]="filtroFecha" (selectionChange)="aplicarFiltros()">
+                      <mat-option value="desc">Más recientes</mat-option>
+                      <mat-option value="asc">Más antiguas</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <button mat-raised-button color="primary" (click)="nuevaFuncion()" class="btn-add">
+                    <mat-icon>add</mat-icon>
+                    Nueva Función
+                  </button>
+                </div>
+              </div>
+
+              <!-- Form Nueva Función -->
+              <div *ngIf="mostrarFormFuncion" class="form-card">
+                <h3>{{ funcionEditando ? 'Editar Función' : 'Nueva Función' }}</h3>
+                <form [formGroup]="funcionForm" (ngSubmit)="guardarFuncion()">
+                  <div class="form-grid">
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Película</mat-label>
+                      <mat-select formControlName="peliculaId" required>
+                        <mat-option *ngFor="let pelicula of peliculas" [value]="pelicula.id">
+                          {{ pelicula.titulo }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Sala</mat-label>
+                      <mat-select formControlName="salaId" required>
+                        <mat-option *ngFor="let sala of salas" [value]="sala.id">
+                          {{ sala.nombre }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Fecha y Hora</mat-label>
+                      <input matInput type="datetime-local" formControlName="fechaHora" required>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Precio Entrada</mat-label>
+                      <input matInput type="number" formControlName="precioEntrada" required placeholder="0.00">
+                      <mat-hint>S/ (Soles)</mat-hint>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Asientos Totales</mat-label>
+                      <input matInput type="number" formControlName="asientosTotales" required placeholder="1" min="1" max="500">
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-actions">
+                    <button mat-raised-button type="submit" color="accent" [disabled]="!funcionForm.valid" class="btn-primary">
+                      <mat-icon>save</mat-icon>
+                      {{ funcionEditando ? 'Actualizar' : 'Guardar' }}
+                    </button>
+                    <button mat-stroked-button type="button" (click)="cancelarFormFuncion()">
+                      <mat-icon>close</mat-icon>
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Lista de Funciones -->
+              <div class="list-container">
+                <mat-spinner *ngIf="loadingFunciones" diameter="40"></mat-spinner>
+                <div *ngIf="!loadingFunciones && funciones.length === 0" class="empty-state">
+                  <mat-icon>schedule</mat-icon>
+                  <p>No hay funciones registradas</p>
+                </div>
+                <table *ngIf="!loadingFunciones && funciones.length > 0" class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Película</th>
+                      <th>Sala</th>
+                      <th>Fecha y Hora</th>
+                      <th>Precio</th>
+                      <th>Asientos</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let funcion of funcionesFiltradas" class="data-row">
+                      <td class="cell-movie">{{ obtenerNombrePelicula(funcion.pelicula?.id) }}</td>
+                      <td>{{ obtenerNombreSala(funcion.sala?.id) }}</td>
+                      <td>{{ formatearFecha(funcion.fechaHora) }}</td>
+                      <td class="cell-price">S/ {{ funcion.precioEntrada | number: '1.2-2' }}</td>
+                      <td class="cell-seats">{{ funcion.asientosTotales }}</td>
+                      <td class="cell-actions">
+                        <button mat-icon-button matTooltip="Editar" (click)="editarFuncion(funcion)">
+                          <mat-icon class="icon-edit">edit</mat-icon>
+                        </button>
+                        <button mat-icon-button matTooltip="Eliminar" (click)="eliminarFuncion(funcion)" color="warn">
+                          <mat-icon class="icon-delete">delete</mat-icon>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </mat-tab>
+
+          <!-- Películas Tab -->
+          <mat-tab label="Películas">
+            <ng-template mat-tab-label>
+              <mat-icon class="tab-icon">movie</mat-icon>
+              <span class="tab-label">Películas</span>
+            </ng-template>
+            <div class="tab-content">
+              <div class="section-header">
+                <div>
+                  <h2><mat-icon>movie</mat-icon> Gestión de Películas</h2>
+                  <p class="section-subtitle">Administra el catálogo de películas disponibles</p>
+                </div>
+                <button mat-raised-button color="primary" (click)="nuevaPelicula()" class="btn-add">
+                  <mat-icon>add</mat-icon>
+                  Nueva Película
+                </button>
+              </div>
+
+              <!-- Form Nueva Película -->
+              <div *ngIf="mostrarFormPelicula" class="form-card">
+                <h3>{{ peliculaEditando ? 'Editar Película' : 'Nueva Película' }}</h3>
+                <form [formGroup]="peliculaForm" (ngSubmit)="guardarPelicula()">
+                  <div class="form-grid">
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Título</mat-label>
+                      <input matInput formControlName="titulo" required>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Género</mat-label>
+                      <input matInput formControlName="genero" required>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Duración (min)</mat-label>
+                      <input matInput type="number" formControlName="duracion" required min="1">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Clasificación</mat-label>
+                      <mat-select formControlName="clasificacion" required>
+                        <mat-option value="G">G</mat-option>
+                        <mat-option value="PG">PG</mat-option>
+                        <mat-option value="PG-13">PG-13</mat-option>
+                        <mat-option value="R">R</mat-option>
+                        <mat-option value="NC-17">NC-17</mat-option>
+                        <mat-option value="ATP">ATP</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Fecha de Estreno</mat-label>
+                      <input matInput type="date" formControlName="fechaEstreno" required>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Poster URL</mat-label>
+                      <input matInput formControlName="posterUrl" required>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Backdrop URL</mat-label>
+                      <input matInput formControlName="backdropUrl">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Sinopsis</mat-label>
+                      <textarea matInput formControlName="sinopsis" required rows="3"></textarea>
+                    </mat-form-field>
+
+                    <mat-checkbox formControlName="activa" class="form-field">
+                      Activa
+                    </mat-checkbox>
+                  </div>
+
+                  <div class="form-actions">
+                    <button mat-raised-button type="submit" color="accent" [disabled]="!peliculaForm.valid" class="btn-primary">
+                      <mat-icon>save</mat-icon>
+                      {{ peliculaEditando ? 'Actualizar' : 'Guardar' }}
+                    </button>
+                    <button mat-stroked-button type="button" (click)="cancelarFormPelicula()">
+                      <mat-icon>close</mat-icon>
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Lista de Películas -->
+              <div class="list-container">
+                <mat-spinner *ngIf="loadingPeliculas" diameter="40"></mat-spinner>
+                <div *ngIf="!loadingPeliculas && peliculas.length === 0" class="empty-state">
+                  <mat-icon>movies</mat-icon>
+                  <p>No hay películas registradas</p>
+                </div>
+                <div *ngIf="!loadingPeliculas && peliculas.length > 0" class="movies-grid">
+                  <div *ngFor="let pelicula of peliculas" class="movie-card">
+                    <div class="movie-poster">
+                      <img [src]="pelicula.posterUrl" [alt]="pelicula.titulo" (error)="onImageError($event)">
+                      <div class="movie-overlay">
+                        <button mat-icon-button matTooltip="Editar" (click)="editarPelicula(pelicula)">
+                          <mat-icon class="icon-edit">edit</mat-icon>
+                        </button>
+                        <button mat-icon-button matTooltip="Eliminar" (click)="eliminarPelicula(pelicula)" color="warn">
+                          <mat-icon class="icon-delete">delete</mat-icon>
+                        </button>
+                      </div>
+                      <div class="movie-badge" [class.activa]="pelicula.activa">
+                        {{ pelicula.activa ? 'Activa' : 'Inactiva' }}
+                      </div>
+                    </div>
+                    <div class="movie-info">
+                      <h4>{{ pelicula.titulo }}</h4>
+                      <p class="genre">{{ pelicula.genero }}</p>
+                      <p class="duration"><mat-icon>schedule</mat-icon> {{ pelicula.duracion }} min</p>
+                      <p class="classification">{{ pelicula.clasificacion }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TMDB Estrenos -->
+              <div class="tmdb-section">
+                <div class="section-header">
+                  <div>
+                    <h3><mat-icon>new_releases</mat-icon> Estrenos TMDB</h3>
+                    <p class="section-subtitle">Importa rápidamente películas próximas</p>
+                  </div>
+                  <div class="tmdb-actions">
+                    <button mat-stroked-button color="primary" (click)="refrescarTmdb()" [disabled]="tmdbLoading">
+                      <mat-icon>refresh</mat-icon>
+                      Actualizar
+                    </button>
+                  </div>
+                </div>
+                <mat-spinner *ngIf="tmdbLoading" diameter="32"></mat-spinner>
+                <div class="tmdb-grid" *ngIf="!tmdbLoading">
+                  <div class="tmdb-card" *ngFor="let movie of tmdbUpcoming">
+                    <div class="tmdb-poster">
+                      <img [src]="movie.posterPath ? (environment.tmdbImageBaseUrl + '/w342' + movie.posterPath) : placeholderImg" [alt]="movie.title" (error)="onTmdbImageError($event)">
+                      <span class="tmdb-badge">Estreno · {{ movie.releaseDate | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                    <div class="tmdb-info">
+                      <div class="tmdb-top">
+                        <h4>{{ movie.title }}</h4>
+                        <span class="pill">Idioma: {{ movie.originalLanguage?.toUpperCase() || 'N/A' }}</span>
+                      </div>
+                      <p class="tmdb-overview">{{ movie.overview || 'Sin sinopsis disponible' }}</p>
+                      <div class="tmdb-meta-row">
+                        <span><mat-icon>schedule</mat-icon> {{ movie.releaseDate | date:'dd/MM/yyyy' }}</span>
+                        <span><mat-icon>star_rate</mat-icon> {{ movie.voteAverage || '—' }}</span>
+                      </div>
+                      <button mat-raised-button color="primary" (click)="importarDesdeTmdb(movie)" class="btn-primary">
+                        <mat-icon>download</mat-icon>
+                        Importar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </mat-tab>
+
+          <!-- Salas Tab -->
+          <mat-tab label="Salas">
+            <ng-template mat-tab-label>
+              <mat-icon class="tab-icon">meeting_room</mat-icon>
+              <span class="tab-label">Salas</span>
+            </ng-template>
+            <div class="tab-content">
+              <div class="section-header">
+                <div>
+                  <h2><mat-icon>meeting_room</mat-icon> Gestión de Salas</h2>
+                  <p class="section-subtitle">Capacidades y tipos de sala</p>
+                </div>
+                <button mat-raised-button color="primary" (click)="nuevaSala()" class="btn-add">
+                  <mat-icon>add</mat-icon>
+                  Nueva Sala
+                </button>
+              </div>
+
+              <div *ngIf="mostrarFormSala" class="form-card">
+                <h3>{{ salaEditando ? 'Editar Sala' : 'Nueva Sala' }}</h3>
+                <form [formGroup]="salaForm" (ngSubmit)="guardarSala()">
+                  <div class="form-grid">
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Nombre</mat-label>
+                      <input matInput formControlName="nombre" required>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Capacidad</mat-label>
+                      <input matInput type="number" formControlName="capacidad" required min="1" max="500">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Tipo</mat-label>
+                      <mat-select formControlName="tipo">
+                        <mat-option value="NORMAL">Normal</mat-option>
+                        <mat-option value="CINE_2D">2D</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Descripción</mat-label>
+                      <input matInput formControlName="descripcion">
+                    </mat-form-field>
+                    <mat-checkbox formControlName="activa" class="form-field">Activa</mat-checkbox>
+                  </div>
+                  <div class="form-actions">
+                    <button mat-raised-button color="accent" type="submit" [disabled]="!salaForm.valid" class="btn-primary">
+                      <mat-icon>save</mat-icon>
+                      {{ salaEditando ? 'Actualizar' : 'Guardar' }}
+                    </button>
+                    <button mat-stroked-button type="button" (click)="cancelarFormSala()">
+                      <mat-icon>close</mat-icon>
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <div class="list-container">
+                <div *ngIf="salas.length === 0" class="empty-state">
+                  <mat-icon>meeting_room</mat-icon>
+                  <p>No hay salas registradas</p>
+                </div>
+                <table *ngIf="salas.length > 0" class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Nombre</th>
+                      <th>Capacidad</th>
+                      <th>Tipo</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let sala of salas">
+                      <td>{{ sala.nombre }}</td>
+                      <td>{{ sala.capacidad }}</td>
+                      <td>{{ sala.tipo }}</td>
+                      <td>
+                        <span class="pill" [ngClass]="{ 'pill-green': sala.activa, 'pill-gray': !sala.activa }">
+                          {{ sala.activa ? 'Activa' : 'Inactiva' }}
+                        </span>
+                      </td>
+                      <td class="cell-actions">
+                        <button mat-icon-button (click)="editarSala(sala)" matTooltip="Editar">
+                          <mat-icon class="icon-edit">edit</mat-icon>
+                        </button>
+                        <button mat-icon-button (click)="eliminarSala(sala)" matTooltip="Eliminar" color="warn">
+                          <mat-icon class="icon-delete">delete</mat-icon>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </mat-tab>
+
+          <!-- Productos Tab -->
+          <mat-tab label="Productos">
+            <ng-template mat-tab-label>
+              <mat-icon class="tab-icon">local_mall</mat-icon>
+              <span class="tab-label">Productos</span>
+            </ng-template>
+            <div class="tab-content">
+              <div class="section-header">
+                <div>
+                  <h2><mat-icon>local_mall</mat-icon> Gestión de Productos</h2>
+                  <p class="section-subtitle">Combos, snacks y bebidas</p>
+                </div>
+                <button mat-raised-button color="primary" (click)="nuevoProducto()" class="btn-add">
+                  <mat-icon>add</mat-icon>
+                  Nuevo Producto
+                </button>
+              </div>
+
+              <div *ngIf="mostrarFormProducto" class="form-card">
+                <h3>{{ productoEditando ? 'Editar Producto' : 'Nuevo Producto' }}</h3>
+                <form [formGroup]="productoForm" (ngSubmit)="guardarProducto()">
+                  <div class="form-grid">
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Nombre</mat-label>
+                      <input matInput formControlName="nombre" required>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Descripción</mat-label>
+                      <textarea matInput formControlName="descripcion" rows="2"></textarea>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Precio</mat-label>
+                      <input matInput type="number" formControlName="precio" required min="0.1" step="0.1">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Stock</mat-label>
+                      <input matInput type="number" formControlName="stock" required min="0">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Categoría</mat-label>
+                      <input matInput formControlName="categoria" required placeholder="Combos, Bebidas, Snacks">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="form-field">
+                      <mat-label>Imagen URL</mat-label>
+                      <input matInput formControlName="imagenUrl">
+                    </mat-form-field>
+                    <mat-checkbox formControlName="activo" class="form-field">Activo</mat-checkbox>
+                  </div>
+                  <div class="form-actions">
+                    <button mat-raised-button color="accent" type="submit" [disabled]="!productoForm.valid" class="btn-primary">
+                      <mat-icon>save</mat-icon>
+                      {{ productoEditando ? 'Actualizar' : 'Guardar' }}
+                    </button>
+                    <button mat-stroked-button type="button" (click)="cancelarFormProducto()">
+                      <mat-icon>close</mat-icon>
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <div class="list-container">
+                <div *ngIf="productos.length === 0" class="empty-state">
+                  <mat-icon>shopping_bag</mat-icon>
+                  <p>No hay productos registrados</p>
+                </div>
+                <div class="products-grid" *ngIf="productos.length > 0">
+                  <div class="product-card" *ngFor="let producto of productos">
+                    <div class="product-thumb">
+                      <img [src]="producto.imagenUrl || placeholderImg" [alt]="producto.nombre" (error)="onProductoImageError($event)">
+                      <span class="pill" [ngClass]="{ 'pill-green': producto.activo, 'pill-gray': !producto.activo }">
+                        {{ producto.activo ? 'Activo' : 'Inactivo' }}
+                      </span>
+                    </div>
+                    <div class="product-info">
+                      <h4>{{ producto.nombre }}</h4>
+                      <p class="product-meta">{{ producto.categoria }}</p>
+                      <p class="product-price">{{ formatearMoneda(producto.precio) }}</p>
+                      <p class="product-stock">Stock: {{ producto.stock }}</p>
+                    </div>
+                    <div class="product-actions">
+                      <button mat-icon-button (click)="editarProducto(producto)" matTooltip="Editar">
+                        <mat-icon class="icon-edit">edit</mat-icon>
+                      </button>
+                      <button mat-icon-button color="warn" (click)="eliminarProducto(producto)" matTooltip="Eliminar">
+                        <mat-icon class="icon-delete">delete</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </mat-tab>
+          </mat-tab-group>
+        </div>
+      </div>
+
+      </div> <!-- /content-shell -->
+    </div>
+  </div>
+</div>

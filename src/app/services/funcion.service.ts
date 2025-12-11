@@ -30,7 +30,16 @@ export class FuncionService {
   }
 
   obtenerFuncionesActivas(): Observable<ApiResponse<Funcion[]>> {
-    return this.http.get<ApiResponse<Funcion[]>>(`${this.apiUrl}/activas`);
+    // El backend usa /disponibles para funciones futuras
+    return this.http.get<ApiResponse<Funcion[]>>(`${this.apiUrl}/disponibles`);
+  }
+
+  obtenerFuncionesDisponiblesPorPelicula(peliculaId: number): Observable<ApiResponse<Funcion[]>> {
+    return this.http.get<ApiResponse<Funcion[]>>(`${this.apiUrl}/pelicula/${peliculaId}/disponibles`);
+  }
+
+  obtenerFuncionesPorFecha(fecha: string): Observable<ApiResponse<Funcion[]>> {
+    return this.http.get<ApiResponse<Funcion[]>>(`${this.apiUrl}/fecha/${fecha}`);
   }
 
   // ===== ADMIN =====

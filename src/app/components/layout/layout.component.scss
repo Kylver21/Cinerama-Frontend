@@ -13,6 +13,19 @@
   z-index: 1;
 }
 
+.layout-container.admin-mode {
+  background: #f5f6fb;
+}
+
+.layout-container.admin-mode .main-content {
+  padding-top: 0;
+}
+
+.main-content.full-width {
+  max-width: 100%;
+  padding: 0;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .main-content {

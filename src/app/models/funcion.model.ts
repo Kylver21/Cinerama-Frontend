@@ -6,8 +6,10 @@ export interface Funcion {
   pelicula: Pelicula;
   sala: Sala;
   fechaHora: string;
-  precio: number;
+  precioEntrada: number; // Campo principal del backend
+  precio?: number; // Alias para compatibilidad
   activa?: boolean;
+  asientosTotales?: number;
   asientosDisponibles?: number;
   asientosOcupados?: number;
 }
@@ -16,8 +18,8 @@ export interface FuncionCreateRequest {
   peliculaId: number;
   salaId: number;
   fechaHora: string;
-  precio: number;
-  activa?: boolean;
+  precioEntrada: number;
+  asientosTotales: number;
 }
 
 

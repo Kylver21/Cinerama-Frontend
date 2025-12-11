@@ -1,11 +1,15 @@
-<div class="layout-container">
-  <app-header></app-header>
-  
-  <main class="main-content">
+<div class="layout-container" [class.admin-mode]="isAdminRoute">
+  <ng-container *ngIf="!isAdminRoute">
+    <app-header></app-header>
+  </ng-container>
+
+  <main class="main-content" [class.full-width]="isAdminRoute">
     <router-outlet></router-outlet>
   </main>
-  
-  <app-footer></app-footer>
+
+  <ng-container *ngIf="!isAdminRoute">
+    <app-footer></app-footer>
+  </ng-container>
 </div>
 
 

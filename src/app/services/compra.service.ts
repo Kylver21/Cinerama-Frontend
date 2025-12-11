@@ -38,11 +38,12 @@ export interface ProductoDetalle {
 }
 
 export interface ConfirmarCompraRequest {
+  clienteId: number; // Requerido por el backend
   funcionId: number;
   asientoIds: number[];
   productos?: ProductoItem[];
   metodoPago: string;
-  tipoComprobante: string;
+  tipoComprobante?: string;
 }
 
 export interface ConfirmarCompraResponse {

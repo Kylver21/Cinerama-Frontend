@@ -25,15 +25,15 @@
     
     <!-- Información de la función -->
     <div class="funcion-info" *ngIf="funcion">
-      <div class="pelicula-poster" *ngIf="pelicula || funcion?.pelicula">
+      <div class="pelicula-poster" *ngIf="pelicula || funcion.pelicula">
         <img 
-          [src]="obtenerImagenPoster(pelicula || funcion?.pelicula)" 
-          [alt]="(pelicula || funcion?.pelicula)?.titulo"
+          [src]="obtenerImagenPoster(pelicula || funcion.pelicula)" 
+          [alt]="(pelicula || funcion.pelicula)?.titulo"
           class="poster-img">
       </div>
       
       <div class="funcion-details">
-        <h2>{{ (pelicula || funcion?.pelicula)?.titulo || 'Película' }}</h2>
+        <h2>{{ (pelicula || funcion.pelicula)?.titulo || 'Película' }}</h2>
         <div class="funcion-meta" *ngIf="funcion">
           <span class="fecha">
             <mat-icon>calendar_today</mat-icon>
@@ -49,7 +49,7 @@
           </span>
           <span class="precio">
             <mat-icon>attach_money</mat-icon>
-            S/ {{ funcion.precio | number:'1.2-2' }}
+            S/ {{ (funcion.precioEntrada || funcion.precio) | number:'1.2-2' }}
           </span>
         </div>
       </div>
@@ -105,7 +105,7 @@
             <div *ngIf="filas.length === 0 && !loading" class="no-asientos">
               <mat-icon>event_seat</mat-icon>
               <p>No hay asientos disponibles para esta función</p>
-              <button mat-raised-button color="primary" (click)="cargarAsientos(funcion?.id!)" *ngIf="funcion?.id">
+              <button mat-raised-button color="primary" (click)="cargarAsientos(funcion.id!)" *ngIf="funcion.id">
                 <mat-icon>refresh</mat-icon>
                 Reintentar
               </button>
@@ -120,6 +120,10 @@
               <div class="leyenda-item">
                 <div class="seat selected"></div>
                 <span>Seleccionado</span>
+              </div>
+              <div class="leyenda-item">
+                <div class="seat reserved"></div>
+                <span>Reservado</span>
               </div>
               <div class="leyenda-item">
                 <div class="seat occupied"></div>
@@ -202,9 +206,9 @@
           
           <div class="resumen-compra">
             <div class="resumen-pelicula">
-              <h4>{{ (pelicula || funcion?.pelicula)?.titulo || 'Película' }}</h4>
+               <h4>{{ (pelicula || funcion.pelicula)?.titulo || 'Película' }}</h4>
               <p>{{ formatearFecha(funcion.fechaHora) }} - {{ formatearHora(funcion.fechaHora) }}</p>
-              <p>{{ funcion.sala?.nombre || 'Sala' }}</p>
+               <p>{{ funcion.sala.nombre || 'Sala' }}</p>
             </div>
             
             <div class="resumen-asientos">
@@ -213,7 +217,7 @@
                 <div *ngFor="let asiento of asientosSeleccionados" class="asiento-item">
                   <span>{{ asiento.fila }}{{ asiento.numero }}</span>
                   <span *ngIf="asiento.tipo === 'VIP'"> (VIP)</span>
-                  <span class="precio">S/ {{ funcion.precio | number:'1.2-2' }}</span>
+                  <span class="precio">S/ {{ (funcion.precioEntrada || funcion.precio) | number:'1.2-2' }}</span>
                 </div>
               </div>
             </div>

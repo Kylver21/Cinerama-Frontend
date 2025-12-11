@@ -1,0 +1,80 @@
+<div class="reportes-container">
+  <div class="header">
+    <h2>Reportes</h2>
+  </div>
+
+  <!-- Películas Populares -->
+  <mat-card class="report-card">
+    <mat-card-header>
+      <mat-card-title>Películas Más Vistas</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-table [dataSource]="peliculasPopulares" class="report-table">
+        <!-- Película Column -->
+        <ng-container matColumnDef="titulo">
+          <mat-header-cell *matHeaderCellDef>Película</mat-header-cell>
+          <mat-cell *matCellDef="let element">{{ element.titulo }}</mat-cell>
+        </ng-container>
+
+        <!-- Funciones Column -->
+        <ng-container matColumnDef="funciones">
+          <mat-header-cell *matHeaderCellDef>Funciones</mat-header-cell>
+          <mat-cell *matCellDef="let element">{{ element.funciones }}</mat-cell>
+        </ng-container>
+
+        <!-- Entradas Column -->
+        <ng-container matColumnDef="entradas">
+          <mat-header-cell *matHeaderCellDef>Entradas Vendidas</mat-header-cell>
+          <mat-cell *matCellDef="let element">{{ element.entradas }}</mat-cell>
+        </ng-container>
+
+        <!-- Ingresos Column -->
+        <ng-container matColumnDef="ingresos">
+          <mat-header-cell *matHeaderCellDef>Ingresos (S/)</mat-header-cell>
+          <mat-cell *matCellDef="let element">
+            <strong>{{ element.ingresos | number: '1.2-2' }}</strong>
+          </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedColumnsPeliculas"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumnsPeliculas;"></mat-row>
+      </mat-table>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Ocupación por Sala -->
+  <mat-card class="report-card">
+    <mat-card-header>
+      <mat-card-title>Ocupación por Sala</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-table [dataSource]="ocupacionSalas" class="report-table">
+        <!-- Sala Column -->
+        <ng-container matColumnDef="sala">
+          <mat-header-cell *matHeaderCellDef>Sala</mat-header-cell>
+          <mat-cell *matCellDef="let element">{{ element.sala }}</mat-cell>
+        </ng-container>
+
+        <!-- Capacidad Column -->
+        <ng-container matColumnDef="capacidad">
+          <mat-header-cell *matHeaderCellDef>Capacidad</mat-header-cell>
+          <mat-cell *matCellDef="let element">{{ element.capacidad }} asientos</mat-cell>
+        </ng-container>
+
+        <!-- Promedio Column -->
+        <ng-container matColumnDef="promedio">
+          <mat-header-cell *matHeaderCellDef>Ocupación Promedio</mat-header-cell>
+          <mat-cell *matCellDef="let element">
+            <div class="ocupacion-bar">
+              <div class="ocupacion-fill" [style.width.%]="element.promedio"></div>
+            </div>
+            {{ element.promedio }}%
+          </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedColumnsSalas"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumnsSalas;"></mat-row>
+      </mat-table>
+    </mat-card-content>
+  </mat-card>
+</div>

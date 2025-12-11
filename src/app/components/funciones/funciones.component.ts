@@ -38,42 +38,35 @@ export class FuncionesComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    // Cargar funciones activas (solo las futuras)
+    // Cargar funciones disponibles (futuras) usando el endpoint correcto
     this.funcionService.obtenerFuncionesActivas().subscribe({
       next: (response) => {
+        console.log('Respuesta de funciones:', response);
         if (response && response.success && response.data) {
           this.funciones = response.data;
           this.aplicarFiltros();
-        } else {
-          // Si no hay funciones activas, intentar cargar todas
-          this.funcionService.obtenerTodasLasFunciones().subscribe({
-            next: (responseAll) => {
-              if (responseAll && responseAll.success && responseAll.data) {
-                this.funciones = responseAll.data;
+        } else if (response && response.data) {
+          // Respuesta sin campo success pero con data
+          this.funciones = response.data;
           this.aplicarFiltros();
         }
         this.loading = false;
       },
       error: (error) => {
-        this.error = error.error?.message || 'Error al cargar funciones';
-        this.loading = false;
-            }
-          });
-        }
-        this.loading = false;
-      },
-      error: (error) => {
-        // Si falla, intentar cargar todas las funciones
+        console.error('Error al cargar funciones disponibles:', error);
+        // Si falla con /disponibles, intentar con todas las funciones
         this.funcionService.obtenerTodasLasFunciones().subscribe({
           next: (response) => {
-            if (response && response.success && response.data) {
+            console.log('Respuesta de todas las funciones:', response);
+            if (response && response.data) {
               this.funciones = response.data;
               this.aplicarFiltros();
             }
             this.loading = false;
           },
           error: (err) => {
-            this.error = err.error?.message || 'Error al cargar funciones';
+            console.error('Error al cargar todas las funciones:', err);
+            this.error = err.error?.message || 'Error al cargar funciones. Verifica que el servidor esté corriendo.';
             this.loading = false;
           }
         });

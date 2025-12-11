@@ -1,0 +1,200 @@
+.funciones-container {
+  padding: 24px;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+
+    h2 {
+      font-size: 28px;
+      font-weight: 500;
+      margin: 0;
+      background: linear-gradient(135deg, #000000 0%, #b40808 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .new-btn {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+  }
+
+  .form-card {
+    margin-bottom: 32px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+
+      .full-width {
+        grid-column: 1 / -1;
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 12px;
+        padding-top: 16px;
+
+        button {
+          flex: 1;
+        }
+      }
+    }
+  }
+
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 16px;
+
+    p {
+      color: #666;
+      font-size: 16px;
+    }
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 16px;
+    color: #999;
+
+    mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      opacity: 0.5;
+    }
+
+    p {
+      font-size: 18px;
+      margin: 0;
+    }
+  }
+
+  .table-card {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+
+    .funciones-table {
+      width: 100%;
+
+      mat-header-row {
+        background: linear-gradient(135deg, #86210f 0%, #000000 100%);
+
+        mat-header-cell {
+          color: white;
+          font-weight: 600;
+          padding: 16px;
+        }
+      }
+
+      mat-row {
+        border-bottom: 1px solid #e0e0e0;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: #f8f8ff;
+        }
+
+        mat-cell {
+          padding: 16px;
+          color: #333;
+
+          .precio-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+          }
+
+          .estado-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+
+            &.proxima {
+              background: #667eea;
+            }
+
+            &.pasada {
+              background: #999;
+            }
+
+            &.cancelada {
+              background: #f5576c;
+            }
+          }
+
+          &.acciones-cell {
+            display: flex;
+            gap: 8px;
+
+            .icon-edit {
+              color: #667eea;
+            }
+
+            .icon-delete {
+              color: #f5576c;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .funciones-container {
+    .header {
+      flex-direction: column;
+      gap: 16px;
+      align-items: flex-start;
+
+      h2 {
+        font-size: 22px;
+      }
+    }
+
+    .table-card {
+      .funciones-table {
+        font-size: 13px;
+
+        mat-cell,
+        mat-header-cell {
+          padding: 12px 8px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .funciones-container {
+    padding: 16px;
+  }
+}

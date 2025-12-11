@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './guards/auth.guard';
-import { AdminGuard } from './guards/admin.guard';
 
 const routes: Routes = [
   {
@@ -32,11 +31,6 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
-    path: 'admin',
-    loadChildren: () => import('./components/admin/admin.module').then(m => m.AdminModule),
-    canActivate: [AdminGuard]
-  },
-  {
     path: 'auth',
     loadChildren: () => import('./components/auth/auth.module').then(m => m.AuthModule)
   },
@@ -51,6 +45,14 @@ const routes: Routes = [
   {
     path: 'chocolateria',
     loadChildren: () => import('./components/chocolateria/chocolateria.module').then(m => m.ChocolateriaModule)
+  },
+  {
+    path: 'admin',
+    loadChildren: () => import('./components/admin/admin.module').then(m => m.AdminModule)
+  },
+  {
+    path: 'admin-login',
+    loadChildren: () => import('./components/admin-login/admin-login.module').then(m => m.AdminLoginModule)
   },
   {
     path: 'acceso-denegado',

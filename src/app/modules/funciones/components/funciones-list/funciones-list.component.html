@@ -1,0 +1,127 @@
+<div class="funciones-container">
+  <div class="header">
+    <h2>Gestión de Funciones (Horarios)</h2>
+    <button mat-raised-button color="primary" (click)="nuevaFuncion()" class="new-btn">
+      <mat-icon>add_circle</mat-icon>
+      Nueva Función
+    </button>
+  </div>
+
+  <!-- Formulario -->
+  <mat-card *ngIf="mostrarFormFuncion" class="form-card">
+    <mat-card-header>
+      <mat-card-title>{{ funcionEditando ? 'Editar Función' : 'Crear Nueva Función' }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="funcionForm" class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Película</mat-label>
+          <mat-select formControlName="peliculaId">
+            <mat-option *ngFor="let pelicula of peliculas" [value]="pelicula.id">
+              {{ pelicula.titulo }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Sala</mat-label>
+          <mat-select formControlName="salaId">
+            <mat-option *ngFor="let sala of salas" [value]="sala.id">
+              {{ sala.nombre }} ({{ sala.tipo }})
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Hora de Inicio</mat-label>
+          <input matInput type="datetime-local" formControlName="horaInicio">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Precio (S/)</mat-label>
+          <input matInput type="number" step="0.01" formControlName="precio" placeholder="25.00">
+        </mat-form-field>
+
+        <div class="checkbox-group full-width">
+          <mat-checkbox formControlName="activa">Función Activa</mat-checkbox>
+        </div>
+
+        <div class="form-actions full-width">
+          <button mat-raised-button color="primary" (click)="guardarFuncion()">
+            {{ funcionEditando ? 'Actualizar' : 'Crear' }}
+          </button>
+          <button mat-stroked-button (click)="cancelarFormFuncion()">Cancelar</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading -->
+  <div *ngIf="loadingFunciones" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Cargando funciones...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loadingFunciones && funciones.length === 0" class="empty-state">
+    <mat-icon>schedule</mat-icon>
+    <p>No hay funciones programadas</p>
+  </div>
+
+  <!-- Funciones Table -->
+  <mat-card *ngIf="!loadingFunciones && funciones.length > 0" class="table-card">
+    <mat-table [dataSource]="funciones" class="funciones-table">
+      <!-- Película Column -->
+      <ng-container matColumnDef="pelicula">
+        <mat-header-cell *matHeaderCellDef>Película</mat-header-cell>
+        <mat-cell *matCellDef="let element">{{ getNombrePelicula(element.peliculaId) }}</mat-cell>
+      </ng-container>
+
+      <!-- Sala Column -->
+      <ng-container matColumnDef="sala">
+        <mat-header-cell *matHeaderCellDef>Sala</mat-header-cell>
+        <mat-cell *matCellDef="let element">{{ getNombreSala(element.salaId) }}</mat-cell>
+      </ng-container>
+
+      <!-- Hora Column -->
+      <ng-container matColumnDef="horaInicio">
+        <mat-header-cell *matHeaderCellDef>Hora de Inicio</mat-header-cell>
+        <mat-cell *matCellDef="let element">{{ formatDateTime(element.horaInicio) }}</mat-cell>
+      </ng-container>
+
+      <!-- Precio Column -->
+      <ng-container matColumnDef="precio">
+        <mat-header-cell *matHeaderCellDef>Precio</mat-header-cell>
+        <mat-cell *matCellDef="let element">
+          <span class="precio-badge">S/ {{ element.precio | number: '1.2-2' }}</span>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Estado Column -->
+      <ng-container matColumnDef="estado">
+        <mat-header-cell *matHeaderCellDef>Estado</mat-header-cell>
+        <mat-cell *matCellDef="let element">
+          <span class="estado-badge" [ngClass]="getEstadoClase(element)">
+            {{ getEstadoLabel(element) }}
+          </span>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Acciones Column -->
+      <ng-container matColumnDef="acciones">
+        <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
+        <mat-cell *matCellDef="let element" class="acciones-cell">
+          <button mat-icon-button matTooltip="Editar" (click)="editarFuncion(element)">
+            <mat-icon class="icon-edit">edit</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Eliminar" (click)="eliminarFuncion(element)">
+            <mat-icon class="icon-delete">delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+  </mat-card>
+</div>

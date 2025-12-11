@@ -1,0 +1,119 @@
+<div class="peliculas-container">
+  <div class="header">
+    <h2>Gestión de Películas</h2>
+    <button mat-raised-button color="primary" (click)="nuevaPelicula()" class="new-btn">
+      <mat-icon>add_circle</mat-icon>
+      Nueva Película
+    </button>
+  </div>
+
+  <!-- Formulario -->
+  <mat-card *ngIf="mostrarFormPelicula" class="form-card">
+    <mat-card-header>
+      <mat-card-title>{{ peliculaEditando ? 'Editar Película' : 'Crear Nueva Película' }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="peliculaForm" class="form-grid">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Título</mat-label>
+          <input matInput formControlName="titulo" placeholder="Ej: Avatar">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Género</mat-label>
+          <input matInput formControlName="genero" placeholder="Ej: Ciencia Ficción">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Duración (minutos)</mat-label>
+          <input matInput type="number" formControlName="duracion" placeholder="120">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Clasificación</mat-label>
+          <mat-select formControlName="clasificacion">
+            <mat-option value="G">G - General</mat-option>
+            <mat-option value="PG">PG - Parental Guidance</mat-option>
+            <mat-option value="PG-13">PG-13</mat-option>
+            <mat-option value="R">R - Restringida</mat-option>
+            <mat-option value="NC-17">NC-17</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Fecha de Estreno</mat-label>
+          <input matInput type="date" formControlName="fechaEstreno">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>URL Póster</mat-label>
+          <input matInput formControlName="posterUrl" placeholder="https://...">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>URL Backdrop (Opcional)</mat-label>
+          <input matInput formControlName="backdropUrl" placeholder="https://...">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Sinopsis</mat-label>
+          <textarea matInput formControlName="sinopsis" rows="4" placeholder="Descripción de la película..."></textarea>
+        </mat-form-field>
+
+        <div class="checkbox-group full-width">
+          <mat-checkbox formControlName="activa">Activa en cartelera</mat-checkbox>
+        </div>
+
+        <div class="form-actions full-width">
+          <button mat-raised-button color="primary" (click)="guardarPelicula()">
+            {{ peliculaEditando ? 'Actualizar' : 'Crear' }}
+          </button>
+          <button mat-stroked-button (click)="cancelarFormPelicula()">Cancelar</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading -->
+  <div *ngIf="loadingPeliculas" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Cargando películas...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loadingPeliculas && peliculas.length === 0" class="empty-state">
+    <mat-icon>movies</mat-icon>
+    <p>No hay películas registradas</p>
+  </div>
+
+  <!-- Movies Grid -->
+  <div *ngIf="!loadingPeliculas && peliculas.length > 0" class="movies-grid">
+    <div *ngFor="let pelicula of peliculas" class="movie-card">
+      <div class="movie-poster">
+        <img [src]="pelicula.posterUrl" [alt]="pelicula.titulo" (error)="onImageError($event)">
+        <div class="movie-overlay">
+          <button mat-icon-button matTooltip="Editar" (click)="editarPelicula(pelicula)">
+            <mat-icon class="icon-edit">edit</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Eliminar" (click)="eliminarPelicula(pelicula)">
+            <mat-icon class="icon-delete">delete</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="movie-badge" [ngClass]="pelicula.activa ? 'active' : 'inactive'">
+        {{ pelicula.activa ? 'Activa' : 'Inactiva' }}
+      </div>
+
+      <div class="movie-info">
+        <h3 class="movie-title">{{ pelicula.titulo }}</h3>
+        <p class="movie-genre">{{ pelicula.genero }}</p>
+        <p class="movie-duration">
+          <mat-icon>schedule</mat-icon>
+          {{ pelicula.duracion }} min
+        </p>
+        <span class="movie-classification">{{ pelicula.clasificacion }}</span>
+      </div>
+    </div>
+  </div>
+</div>

@@ -285,6 +285,12 @@
   cursor: not-allowed;
 }
 
+.seat.reserved {
+  background-color: #ff9800;
+  color: white;
+  cursor: not-allowed;
+}
+
 .seat.vip {
   background-color: var(--cinerama-red-dark);
   color: white;

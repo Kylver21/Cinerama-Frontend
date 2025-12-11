@@ -1,0 +1,101 @@
+<div class="ventas-container">
+  <div class="header">
+    <h2>Panel de Ventas</h2>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-icon ventas">
+          <mat-icon>shopping_bag</mat-icon>
+        </div>
+        <div class="stat-info">
+          <p class="stat-label">Ventas Hoy</p>
+          <h3 class="stat-value">{{ ventasHoy }}</h3>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-icon ingresos">
+          <mat-icon>attach_money</mat-icon>
+        </div>
+        <div class="stat-info">
+          <p class="stat-label">Ingresos Hoy</p>
+          <h3 class="stat-value">S/ {{ ingresoHoy | number: '1.2-2' }}</h3>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-icon mes">
+          <mat-icon>calendar_month</mat-icon>
+        </div>
+        <div class="stat-info">
+          <p class="stat-label">Ventas Este Mes</p>
+          <h3 class="stat-value">{{ ventasMes }}</h3>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-icon productos">
+          <mat-icon>inventory_2</mat-icon>
+        </div>
+        <div class="stat-info">
+          <p class="stat-label">Productos en Stock</p>
+          <h3 class="stat-value">{{ totalProductos }}</h3>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Ventas Recientes -->
+  <mat-card class="table-card">
+    <mat-card-header>
+      <mat-card-title>Ventas Recientes</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-table [dataSource]="ventasRecientes" class="ventas-table">
+        <!-- Producto Column -->
+        <ng-container matColumnDef="producto">
+          <mat-header-cell *matHeaderCellDef>Producto</mat-header-cell>
+          <mat-cell *matCellDef="let element">{{ element.producto }}</mat-cell>
+        </ng-container>
+
+        <!-- Cantidad Column -->
+        <ng-container matColumnDef="cantidad">
+          <mat-header-cell *matHeaderCellDef>Cantidad</mat-header-cell>
+          <mat-cell *matCellDef="let element">{{ element.cantidad }}</mat-cell>
+        </ng-container>
+
+        <!-- Precio Column -->
+        <ng-container matColumnDef="precio">
+          <mat-header-cell *matHeaderCellDef>Precio</mat-header-cell>
+          <mat-cell *matCellDef="let element">S/ {{ element.precio | number: '1.2-2' }}</mat-cell>
+        </ng-container>
+
+        <!-- Total Column -->
+        <ng-container matColumnDef="total">
+          <mat-header-cell *matHeaderCellDef>Total</mat-header-cell>
+          <mat-cell *matCellDef="let element">
+            <strong>S/ {{ element.total | number: '1.2-2' }}</strong>
+          </mat-cell>
+        </ng-container>
+
+        <!-- Fecha Column -->
+        <ng-container matColumnDef="fecha">
+          <mat-header-cell *matHeaderCellDef>Fecha</mat-header-cell>
+          <mat-cell *matCellDef="let element">{{ element.fecha | date: 'short' }}</mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+      </mat-table>
+    </mat-card-content>
+  </mat-card>
+</div>

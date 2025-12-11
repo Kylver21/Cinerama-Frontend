@@ -130,7 +130,7 @@
                     </div>
                     <div class="funcion-precio">
                       <mat-icon>attach_money</mat-icon>
-                      <span>S/ {{ funcion.precio | number:'1.2-2' }}</span>
+                      <span>S/ {{ (funcion.precioEntrada || funcion.precio) | number:'1.2-2' }}</span>
                     </div>
                     <div class="funcion-tipo">
                       <mat-chip class="tipo-chip" *ngIf="obtenerTipoSala(funcion.sala)">{{ obtenerTipoSala(funcion.sala) }}</mat-chip>
