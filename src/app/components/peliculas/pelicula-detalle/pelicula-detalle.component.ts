@@ -5,6 +5,7 @@ import { FuncionService } from '../../../services/funcion.service';
 import { AuthService } from '../../../services/auth.service';
 import { Pelicula } from '../../../models/pelicula.model';
 import { Funcion } from '../../../models/funcion.model';
+import { catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-pelicula-detalle',
@@ -14,12 +15,16 @@ import { Funcion } from '../../../models/funcion.model';
 export class PeliculaDetalleComponent implements OnInit {
   pelicula: Pelicula | null = null;
   funciones: Funcion[] = [];
+  loadingFunciones = false;
   
   loading = false;
   error: string | null = null;
   
   // Tabs
   selectedTab = 0;
+
+  private static readonly LS_PRESELECT_PRODUCT_ID = 'cinerama_preselect_product_id';
+  private static readonly LS_LAST_COMPRA_CONTEXT = 'cinerama_last_compra_context';
 
   constructor(
     private route: ActivatedRoute,
@@ -61,23 +66,35 @@ export class PeliculaDetalleComponent implements OnInit {
   }
 
   cargarFunciones(peliculaId: number): void {
-    this.funcionService.obtenerFuncionesPorPelicula(peliculaId).subscribe({
+    this.loadingFunciones = true;
+    // Preferir el endpoint de funciones disponibles (futuras) para evitar filtrar mal en frontend.
+    this.funcionService.obtenerFuncionesDisponiblesPorPelicula(peliculaId).pipe(
+      // Fallback por compatibilidad si el backend no expone /pelicula/:id/disponibles
+      catchError(() => this.funcionService.obtenerFuncionesPorPelicula(peliculaId)),
+      catchError((error) => {
+        console.error('Error al cargar funciones:', error);
+        return of({ success: false, message: 'Error', data: [] } as any);
+      })
+    ).subscribe({
       next: (response) => {
         if (response && response.success && response.data) {
-          // Filtrar solo funciones activas y futuras
+          // Filtrar solo funciones futuras; si "activa" viene undefined, no excluir.
           const ahora = new Date();
-          this.funciones = response.data.filter(f => {
-            if (!f.activa) return false;
+          const data = Array.isArray(response.data) ? response.data : [];
+          this.funciones = data.filter((f: Funcion) => {
+            if (f.activa === false) return false;
             const fechaFuncion = new Date(f.fechaHora);
             return fechaFuncion > ahora;
           });
         } else {
           this.funciones = [];
         }
+        this.loadingFunciones = false;
       },
       error: (error) => {
         console.error('Error al cargar funciones:', error);
         this.funciones = [];
+        this.loadingFunciones = false;
       }
     });
   }
@@ -115,6 +132,16 @@ export class PeliculaDetalleComponent implements OnInit {
   }
 
   comprarEntrada(funcion: Funcion): void {
+    // Guardar contexto de compra para poder volver desde Chocolatería
+    localStorage.setItem(
+      PeliculaDetalleComponent.LS_LAST_COMPRA_CONTEXT,
+      JSON.stringify({ funcionId: funcion.id, peliculaId: this.pelicula?.id })
+    );
+
+    const raw = localStorage.getItem(PeliculaDetalleComponent.LS_PRESELECT_PRODUCT_ID);
+    const productoId = raw ? Number(raw) : NaN;
+    const productoIdPreseleccionado = Number.isFinite(productoId) && productoId > 0 ? productoId : null;
+
     // Verificar si el usuario está autenticado
     if (!this.authService.isAuthenticated()) {
       // Redirigir al login
@@ -123,6 +150,7 @@ export class PeliculaDetalleComponent implements OnInit {
           returnUrl: '/compra',
           funcionId: funcion.id,
           peliculaId: this.pelicula?.id,
+          productoId: productoIdPreseleccionado,
           message: 'Debes iniciar sesión para comprar entradas'
         } 
       });
@@ -133,7 +161,8 @@ export class PeliculaDetalleComponent implements OnInit {
     this.router.navigate(['/compra'], { 
       queryParams: { 
         funcionId: funcion.id,
-        peliculaId: this.pelicula?.id 
+        peliculaId: this.pelicula?.id,
+        productoId: productoIdPreseleccionado
       } 
     });
   }

@@ -31,10 +31,16 @@
   gap: 20px;
   justify-content: center;
   flex-wrap: wrap;
+  background: var(--cinerama-card-bg);
+  border: 1px solid var(--cinerama-border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 .filtro-field {
   min-width: 200px;
+  width: 280px;
 }
 
 .funciones-grid {
@@ -203,9 +209,9 @@
 }
 
 /* Estilos para formularios */
-::ng-deep .mat-mdc-form-field {
+::ng-deep .filtros .mat-mdc-form-field {
   .mat-mdc-text-field-wrapper {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.12);
     border-radius: 10px;
   }
   
@@ -213,12 +219,32 @@
     background-color: rgba(255, 26, 26, 0.1);
   }
   
-  .mat-mdc-form-field-label {
-    color: var(--cinerama-text-secondary);
+  .mat-mdc-form-field-label,
+  .mdc-floating-label {
+    color: rgba(255, 255, 255, 0.85);
   }
   
   .mat-mdc-input-element {
-    color: var(--cinerama-text-primary);
+    color: #fff;
+  }
+
+  .mat-mdc-input-element::placeholder {
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  .mat-mdc-select-value,
+  .mat-mdc-select-value-text,
+  .mat-mdc-select-placeholder {
+    color: #fff;
+  }
+
+  .mat-mdc-select-arrow {
+    color: #fff;
+  }
+
+  .mat-mdc-form-field-icon-suffix,
+  .mat-icon {
+    color: rgba(255, 255, 255, 0.9);
   }
   
   .mat-mdc-form-field-outline {

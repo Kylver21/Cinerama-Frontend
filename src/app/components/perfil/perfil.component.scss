@@ -311,6 +311,57 @@
   }
 }
 
+.productos-resumen {
+  padding: 15px 20px;
+  border-top: 1px dashed var(--cinerama-border);
+  background: rgba(0, 0, 0, 0.25);
+
+  .productos-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--cinerama-gold);
+    font-weight: 600;
+    margin-bottom: 12px;
+
+    mat-icon {
+      color: var(--cinerama-red-bright);
+    }
+  }
+
+  .productos-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .producto-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--cinerama-border);
+    background: rgba(0, 0, 0, 0.2);
+
+    .producto-nombre {
+      color: white;
+      font-weight: 500;
+    }
+
+    .producto-cantidad {
+      color: var(--cinerama-text-secondary);
+      font-weight: 600;
+    }
+
+    .producto-subtotal {
+      color: var(--cinerama-gold);
+      font-weight: 700;
+    }
+  }
+}
+
 /* Configuración */
 .config-section {
   padding: 30px;

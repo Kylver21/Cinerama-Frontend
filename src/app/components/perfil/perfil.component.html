@@ -68,7 +68,7 @@
             </div>
 
             <!-- Sin compras -->
-            <div *ngIf="!cargandoCompras && !errorCompras && misCompras.length === 0" class="sin-compras">
+            <div *ngIf="!cargandoCompras && !errorCompras && historialCompras.length === 0" class="sin-compras">
               <mat-icon>local_movies</mat-icon>
               <p>No tienes compras realizadas aún</p>
               <a mat-raised-button color="primary" routerLink="/peliculas">
@@ -78,51 +78,68 @@
             </div>
 
             <!-- Lista de compras -->
-            <div *ngIf="!cargandoCompras && !errorCompras && misCompras.length > 0" class="compras-list">
-              <h3>🎟️ Mis Boletos ({{ misCompras.length }})</h3>
-              
-              <div class="boleto-card" *ngFor="let boleto of misCompras">
+            <div *ngIf="!cargandoCompras && !errorCompras && historialCompras.length > 0" class="compras-list">
+              <h3>🧾 Historial de Compras ({{ historialCompras.length }})</h3>
+
+              <div class="boleto-card" *ngFor="let compra of historialCompras">
                 <div class="boleto-header">
                   <div class="pelicula-info">
-                    <img *ngIf="boleto.funcion?.pelicula?.posterUrl" 
-                         [src]="boleto.funcion?.pelicula?.posterUrl" 
-                         [alt]="boleto.funcion?.pelicula?.titulo || 'Poster'"
+                    <img *ngIf="compra.posterUrl" 
+                         [src]="compra.posterUrl" 
+                         [alt]="compra.peliculaTitulo || 'Poster'"
                          class="poster-mini">
                     <div class="pelicula-detalles">
-                      <h4>{{ boleto.funcion?.pelicula?.titulo || 'Película' }}</h4>
-                      <p class="sala-info">
+                      <h4>{{ compra.peliculaTitulo || 'Compra' }}</h4>
+                      <p class="sala-info" *ngIf="compra.salaNombre">
                         <mat-icon>meeting_room</mat-icon>
-                        {{ boleto.funcion?.sala?.nombre || 'Sala' }}
+                        {{ compra.salaNombre }}
                       </p>
                     </div>
                   </div>
-                  <span class="estado-badge" [ngClass]="getEstadoClass(boleto.estado)">
-                    {{ boleto.estado }}
+                  <span class="estado-badge" [ngClass]="getEstadoClass(compra.estado || 'PAGADO')">
+                    {{ compra.estado || 'PAGADO' }}
                   </span>
                 </div>
-                
+
                 <div class="boleto-body">
-                  <div class="boleto-detalle">
+                  <div class="boleto-detalle" *ngIf="compra.asientos.length > 0">
                     <mat-icon>event_seat</mat-icon>
-                    <span>Asiento: <strong>{{ getCodigoAsiento(boleto.asiento) }}</strong></span>
+                    <span>Asientos: <strong>{{ getAsientosLabel(compra) }}</strong></span>
                   </div>
-                  <div class="boleto-detalle">
+
+                  <div class="boleto-detalle" *ngIf="compra.fechaFuncion">
                     <mat-icon>schedule</mat-icon>
-                    <span>{{ formatFecha(boleto.funcion?.fechaHora) }}</span>
+                    <span>{{ formatFecha(compra.fechaFuncion) }}</span>
                   </div>
-                  <div class="boleto-detalle">
+
+                  <div class="boleto-detalle" *ngIf="compra.fechaCompra">
                     <mat-icon>calendar_today</mat-icon>
-                    <span>Comprado: {{ formatFecha(boleto.fechaCompra) }}</span>
+                    <span>Comprado: {{ formatFecha(compra.fechaCompra) }}</span>
                   </div>
+
+                  <div class="boleto-detalle" *ngIf="compra.metodoPago">
+                    <mat-icon>credit_card</mat-icon>
+                    <span>Método: {{ compra.metodoPago }}</span>
+                  </div>
+
                   <div class="boleto-detalle precio">
                     <mat-icon>payments</mat-icon>
-                    <span>S/. {{ boleto.precio | number:'1.2-2' }}</span>
+                    <span>S/. {{ getTotal(compra) | number:'1.2-2' }}</span>
                   </div>
                 </div>
 
-                <div class="boleto-qr" *ngIf="boleto.codigoQR">
-                  <mat-icon>qr_code_2</mat-icon>
-                  <span>{{ boleto.codigoQR }}</span>
+                <div class="productos-resumen" *ngIf="getTieneProductos(compra)">
+                  <div class="productos-title">
+                    <mat-icon>local_cafe</mat-icon>
+                    <span>Chocolatería</span>
+                  </div>
+                  <div class="productos-grid">
+                    <div class="producto-item" *ngFor="let p of compra.productos">
+                      <span class="producto-nombre">{{ p.nombre }}</span>
+                      <span class="producto-cantidad">x{{ p.cantidad }}</span>
+                      <span class="producto-subtotal">S/. {{ p.subtotal | number:'1.2-2' }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

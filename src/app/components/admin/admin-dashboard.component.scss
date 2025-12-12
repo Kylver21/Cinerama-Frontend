@@ -881,6 +881,17 @@ $bg-white: #ffffff;
 
 .filter-field {
   width: 220px;
+
+  ::ng-deep {
+    .mat-mdc-select-value-text,
+    .mat-mdc-select-arrow {
+      color: $text-dark !important;
+    }
+
+    .mdc-floating-label {
+      color: $text-dark !important;
+    }
+  }
 }
 
 // ===== FORMS =====
@@ -945,6 +956,33 @@ $bg-white: #ffffff;
   ::ng-deep {
     .mat-mdc-form-field {
       width: 100%;
+    }
+
+    .mat-mdc-input-element,
+    textarea.mat-mdc-input-element {
+      color: $text-dark !important;
+      caret-color: $text-dark !important;
+      -webkit-text-fill-color: $text-dark !important;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: rgba($text-dark, 0.55) !important;
+      -webkit-text-fill-color: rgba($text-dark, 0.55) !important;
+    }
+
+    .mat-mdc-select-value-text,
+    .mat-mdc-select-arrow {
+      color: $text-dark !important;
+    }
+
+    .mdc-floating-label {
+      color: $text-dark !important;
+    }
+
+    .mat-mdc-form-field-hint,
+    .mat-mdc-form-field-error {
+      color: $text-light !important;
     }
 
     .mdc-notched-outline__leading,

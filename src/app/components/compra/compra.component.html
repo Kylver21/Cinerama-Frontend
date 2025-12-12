@@ -1,4 +1,12 @@
 <div class="compra-container">
+  <div class="compra-timer-float" *ngIf="funcion && currentStep < 4" [class.expiring]="tiempoPorExpirar">
+    <mat-icon class="timer-icon">timer</mat-icon>
+    <div class="timer-text">
+      <div class="label">Tiempo de reserva</div>
+      <div class="time">{{ tiempoRestanteLabel }}</div>
+    </div>
+  </div>
+
   <!-- Header -->
   <div class="compra-header">
     <button mat-icon-button (click)="volverAPeliculas()" class="back-button">
@@ -28,12 +36,12 @@
       <div class="pelicula-poster" *ngIf="pelicula || funcion.pelicula">
         <img 
           [src]="obtenerImagenPoster(pelicula || funcion.pelicula)" 
-          [alt]="(pelicula || funcion.pelicula)?.titulo"
+          [alt]="(pelicula || funcion.pelicula).titulo"
           class="poster-img">
       </div>
       
       <div class="funcion-details">
-        <h2>{{ (pelicula || funcion.pelicula)?.titulo || 'Película' }}</h2>
+        <h2>{{ (pelicula || funcion.pelicula).titulo || 'Película' }}</h2>
         <div class="funcion-meta" *ngIf="funcion">
           <span class="fecha">
             <mat-icon>calendar_today</mat-icon>
@@ -45,7 +53,7 @@
           </span>
           <span class="sala">
             <mat-icon>room</mat-icon>
-            {{ funcion.sala?.nombre || 'Sala' }}
+            {{ funcion.sala.nombre || 'Sala' }}
           </span>
           <span class="precio">
             <mat-icon>attach_money</mat-icon>
@@ -53,6 +61,11 @@
           </span>
         </div>
       </div>
+    </div>
+
+    <div class="compra-expirada" *ngIf="compraExpirada">
+      <mat-icon>timer_off</mat-icon>
+      <p>El tiempo de compra expiró. Se reinició la selección.</p>
     </div>
     
     <!-- Mensaje si no hay función -->
@@ -152,7 +165,67 @@
         </div>
       </mat-step>
 
-      <!-- Paso 2: Datos de Compra -->
+      <!-- Paso 2: Chocolatería (Opcional) -->
+      <mat-step label="Chocolatería (Opcional)">
+        <div class="step-content">
+          <h3>¿Deseas agregar productos de chocolatería?</h3>
+          <p class="step-hint">Este paso es opcional. Puedes continuar sin seleccionar productos.</p>
+
+          <div *ngIf="loadingProductos" class="loading-asientos">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Cargando productos...</p>
+          </div>
+
+          <div *ngIf="!loadingProductos && productosDisponibles.length === 0" class="no-asientos">
+            <mat-icon>local_mall</mat-icon>
+            <p>No hay productos disponibles por el momento</p>
+          </div>
+
+          <div *ngIf="!loadingProductos && productosDisponibles.length > 0" class="productos-grid">
+            <div class="producto-card" *ngFor="let producto of productosDisponibles">
+              <div class="producto-img">
+                <img
+                  [src]="obtenerImagenProducto(producto)"
+                  [alt]="producto.nombre"
+                  loading="lazy"
+                  (error)="onProductoImgError($event)">
+              </div>
+              <div class="producto-info">
+                <h4>{{ producto.nombre }}</h4>
+                <p class="producto-desc" *ngIf="producto.descripcion">{{ producto.descripcion }}</p>
+                <div class="producto-meta">
+                  <span class="producto-precio">S/ {{ producto.precio | number:'1.2-2' }}</span>
+                  <span class="producto-stock" *ngIf="producto.stock != null">Stock: {{ producto.stock }}</span>
+                </div>
+              </div>
+
+              <div class="producto-actions">
+                <button mat-icon-button (click)="decrementarProducto(producto)" [disabled]="getCantidadProducto(producto) === 0">
+                  <mat-icon>remove</mat-icon>
+                </button>
+                <span class="cantidad">{{ getCantidadProducto(producto) }}</span>
+                <button mat-icon-button (click)="incrementarProducto(producto)">
+                  <mat-icon>add</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="obtenerProductosParaRequest().length > 0" class="seleccion-resumen">
+            <h4>Productos Seleccionados:</h4>
+            <div class="productos-seleccionados">
+              <mat-chip *ngFor="let item of obtenerProductosSeleccionados()" class="asiento-chip">
+                {{ item.nombre }} x{{ item.cantidad }}
+              </mat-chip>
+            </div>
+            <div class="total-preliminar">
+              <strong>Subtotal Productos: S/ {{ calcularTotalProductosLocal() | number:'1.2-2' }}</strong>
+            </div>
+          </div>
+        </div>
+      </mat-step>
+
+      <!-- Paso 3: Datos de Compra -->
       <mat-step label="Datos de Compra">
         <div class="step-content">
           <h3>Completa tus datos</h3>
@@ -199,14 +272,14 @@
         </div>
       </mat-step>
 
-      <!-- Paso 3: Resumen y Confirmación -->
+      <!-- Paso 4: Resumen y Confirmación -->
       <mat-step label="Confirmar Compra">
         <div class="step-content">
           <h3>Resumen de tu Compra</h3>
           
           <div class="resumen-compra">
             <div class="resumen-pelicula">
-               <h4>{{ (pelicula || funcion.pelicula)?.titulo || 'Película' }}</h4>
+              <h4>{{ (pelicula || funcion.pelicula).titulo || 'Película' }}</h4>
               <p>{{ formatearFecha(funcion.fechaHora) }} - {{ formatearHora(funcion.fechaHora) }}</p>
                <p>{{ funcion.sala.nombre || 'Sala' }}</p>
             </div>
@@ -221,26 +294,36 @@
                 </div>
               </div>
             </div>
+
+            <div class="resumen-asientos" *ngIf="obtenerProductosParaRequest().length > 0">
+              <h4>Chocolatería:</h4>
+              <div class="asientos-lista">
+                <div *ngFor="let item of obtenerProductosSeleccionados()" class="asiento-item">
+                  <span>{{ item.nombre }} x{{ item.cantidad }}</span>
+                  <span class="precio">S/ {{ item.subtotal | number:'1.2-2' }}</span>
+                </div>
+              </div>
+            </div>
             
             <div class="resumen-total">
               <div class="total-line">
-                <span>Subtotal:</span>
-                <span>S/ {{ calcularTotal() | number:'1.2-2' }}</span>
+                <span>Subtotal Boletos:</span>
+                <span>S/ {{ (resumenTotal?.subtotalBoletos ?? calcularTotal()) | number:'1.2-2' }}</span>
               </div>
-              <div class="total-line">
-                <span>Servicio:</span>
-                <span>S/ 0.00</span>
+              <div class="total-line" *ngIf="obtenerProductosParaRequest().length > 0">
+                <span>Subtotal Productos:</span>
+                <span>S/ {{ (resumenTotal?.subtotalProductos ?? calcularTotalProductosLocal()) | number:'1.2-2' }}</span>
               </div>
               <div class="total-line total-final">
                 <span><strong>Total:</strong></span>
-                <span><strong>S/ {{ calcularTotal() | number:'1.2-2' }}</strong></span>
+                <span><strong>S/ {{ totalGeneral() | number:'1.2-2' }}</strong></span>
               </div>
             </div>
           </div>
         </div>
       </mat-step>
 
-      <!-- Paso 4: Confirmación Final -->
+      <!-- Paso 5: Confirmación Final -->
       <mat-step label="¡Compra Exitosa!">
         <div class="step-content">
           <div class="confirmacion-final" *ngIf="compraConfirmada">
@@ -313,19 +396,19 @@
     </mat-stepper>
 
     <!-- Botones de navegación -->
-    <div class="stepper-actions" *ngIf="currentStep < 3">
+    <div class="stepper-actions" *ngIf="currentStep < 4">
       <button mat-button (click)="pasoAnterior()" [disabled]="currentStep === 0">
         <mat-icon>arrow_back</mat-icon>
         Anterior
       </button>
       
-      <button mat-raised-button color="primary" (click)="currentStep === 2 ? confirmarCompra() : siguientePaso()" 
+      <button mat-raised-button color="primary" (click)="currentStep === 3 ? confirmarCompra() : siguientePaso()" 
               [disabled]="loading">
         <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
         <span *ngIf="!loading">
-          {{ currentStep === 2 ? 'Confirmar Compra' : 'Siguiente' }}
+          {{ currentStep === 3 ? 'Confirmar Compra' : 'Siguiente' }}
         </span>
-        <mat-icon *ngIf="!loading && currentStep !== 2">arrow_forward</mat-icon>
+        <mat-icon *ngIf="!loading && currentStep !== 3">arrow_forward</mat-icon>
       </button>
     </div>
   </div>

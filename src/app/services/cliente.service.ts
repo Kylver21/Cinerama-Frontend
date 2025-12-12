@@ -32,6 +32,14 @@ export class ClienteService {
   eliminarCliente(id: number): Observable<ApiResponse<string>> {
     return this.http.delete<ApiResponse<string>>(`${this.apiUrl}/${id}`);
   }
+
+  /**
+   * Historial unificado del cliente (boletos + compras de chocolatería)
+   * GET /api/clientes/{clienteId}/historial
+   */
+  obtenerHistorial(clienteId: number): Observable<ApiResponse<unknown>> {
+    return this.http.get<ApiResponse<unknown>>(`${this.apiUrl}/${clienteId}/historial`);
+  }
 }
 
 

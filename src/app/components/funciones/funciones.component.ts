@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FuncionService } from '../../services/funcion.service';
 import { PeliculaService } from '../../services/pelicula.service';
 import { AuthService } from '../../services/auth.service';
@@ -22,14 +22,29 @@ export class FuncionesComponent implements OnInit {
   peliculaFiltro: number | null = null;
   fechaFiltro: Date | null = null;
 
+  private static readonly LS_PRESELECT_PRODUCT_ID = 'cinerama_preselect_product_id';
+  private static readonly LS_LAST_COMPRA_CONTEXT = 'cinerama_last_compra_context';
+  private productoIdPreseleccionado: number | null = null;
+
   constructor(
     private funcionService: FuncionService,
     private peliculaService: PeliculaService,
+    private route: ActivatedRoute,
     private router: Router,
     private authService: AuthService
   ) {}
 
   ngOnInit(): void {
+    const productoId = Number(this.route.snapshot.queryParamMap.get('productoId'));
+    if (Number.isFinite(productoId) && productoId > 0) {
+      this.productoIdPreseleccionado = productoId;
+      localStorage.setItem(FuncionesComponent.LS_PRESELECT_PRODUCT_ID, String(productoId));
+    } else {
+      const raw = localStorage.getItem(FuncionesComponent.LS_PRESELECT_PRODUCT_ID);
+      const fromStorage = raw ? Number(raw) : NaN;
+      this.productoIdPreseleccionado = Number.isFinite(fromStorage) && fromStorage > 0 ? fromStorage : null;
+    }
+
     this.cargarFunciones();
     this.cargarPeliculas();
   }
@@ -109,6 +124,12 @@ export class FuncionesComponent implements OnInit {
   }
 
   comprarEntrada(funcion: Funcion): void {
+    // Guardar contexto de compra para poder volver desde Chocolatería
+    localStorage.setItem(
+      FuncionesComponent.LS_LAST_COMPRA_CONTEXT,
+      JSON.stringify({ funcionId: funcion.id, peliculaId: funcion.pelicula.id })
+    );
+
     // Verificar si el usuario está autenticado
     if (!this.authService.isAuthenticated()) {
       // Redirigir al login con mensaje
@@ -117,6 +138,7 @@ export class FuncionesComponent implements OnInit {
           returnUrl: '/compra',
           funcionId: funcion.id,
           peliculaId: funcion.pelicula.id,
+          productoId: this.productoIdPreseleccionado,
           message: 'Debes iniciar sesión para comprar entradas'
         } 
       });
@@ -127,7 +149,8 @@ export class FuncionesComponent implements OnInit {
     this.router.navigate(['/compra'], { 
       queryParams: { 
         funcionId: funcion.id,
-        peliculaId: funcion.pelicula.id 
+        peliculaId: funcion.pelicula.id,
+        productoId: this.productoIdPreseleccionado
       } 
     });
   }

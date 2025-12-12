@@ -454,7 +454,7 @@
                     <div class="tmdb-info">
                       <div class="tmdb-top">
                         <h4>{{ movie.title }}</h4>
-                        <span class="pill">Idioma: {{ movie.originalLanguage?.toUpperCase() || 'N/A' }}</span>
+                        <span class="pill">Idioma: {{ movie.originalLanguage.toUpperCase() || 'N/A' }}</span>
                       </div>
                       <p class="tmdb-overview">{{ movie.overview || 'Sin sinopsis disponible' }}</p>
                       <div class="tmdb-meta-row">

@@ -8,11 +8,15 @@ import { BoletoService } from '../../services/boleto.service';
 import { AuthService } from '../../services/auth.service';
 import { WebSocketService, AsientoUpdate } from '../../services/websocket.service';
 import { CompraService } from '../../services/compra.service';
+import { CalcularTotalResponse, ProductoItem } from '../../services/compra.service';
+import { ProductoService } from '../../services/producto.service';
+import { ClienteService } from '../../services/cliente.service';
 import { Funcion } from '../../models/funcion.model';
 import { Pelicula } from '../../models/pelicula.model';
 import { Asiento, EstadoAsiento, TipoAsiento } from '../../models/asiento.model';
 import { BoletoCreateRequest } from '../../models/boleto.model';
-import { Subscription } from 'rxjs';
+import { Producto } from '../../models/producto.model';
+import { Subscription, interval } from 'rxjs';
 
 @Component({
   selector: 'app-compra',
@@ -20,6 +24,9 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./compra.component.scss']
 })
 export class CompraComponent implements OnInit, OnDestroy {
+  private static readonly COMPRA_TIMEOUT_MS = 5 * 60 * 1000;
+  private static readonly LS_PRESELECT_PRODUCT_ID = 'cinerama_preselect_product_id';
+
   // Formulario
   compraForm: FormGroup;
   
@@ -34,6 +41,12 @@ export class CompraComponent implements OnInit, OnDestroy {
   loading = false;
   error: string | null = null;
   compraConfirmada: any = null; // Datos de la compra confirmada
+
+  // Chocolatería (opcional)
+  productosDisponibles: Producto[] = [];
+  productoCantidades: Record<number, number> = {};
+  loadingProductos = false;
+  resumenTotal: CalcularTotalResponse | null = null;
   
   // Mapa de asientos
   asientosPorFila: { [key: string]: Asiento[] } = {};
@@ -42,12 +55,23 @@ export class CompraComponent implements OnInit, OnDestroy {
   // WebSocket
   private wsSubscription?: Subscription;
   private asientoUpdateSubscription?: Subscription;
+
+  private readonly fallbackProductoImg = 'https://via.placeholder.com/600x400/1a1a1a/ffffff?text=Producto';
+
+  private preselectedProductoId: number | null = null;
+
+  // Cuenta regresiva de compra
+  private countdownSub?: Subscription;
+  private compraExpiresAt = 0;
+  tiempoRestanteSegundos = 0;
+  tiempoRestanteLabel = '05:00';
+  compraExpirada = false;
   
   // Métodos de pago
   metodosPago = [
-    { value: 'EFECTIVO', label: 'Efectivo' },
-    { value: 'TARJETA', label: 'Tarjeta de Crédito/Débito' },
-    { value: 'TRANSFERENCIA', label: 'Transferencia Bancaria' }
+    { value: 'EFECTIVO', label: 'Efectivo (en taquilla)' },
+    { value: 'TARJETA', label: 'Tarjeta (crédito/débito)' },
+    { value: 'TRANSFERENCIA', label: 'Transferencia (banca móvil/QR)' }
   ];
 
   constructor(
@@ -60,7 +84,9 @@ export class CompraComponent implements OnInit, OnDestroy {
     private boletoService: BoletoService,
     private authService: AuthService,
     private webSocketService: WebSocketService,
-    private compraService: CompraService
+    private compraService: CompraService,
+    private productoService: ProductoService,
+    private clienteService: ClienteService
   ) {
     this.compraForm = this.fb.group({
       metodoPago: ['', Validators.required],
@@ -87,16 +113,28 @@ export class CompraComponent implements OnInit, OnDestroy {
     }
 
     console.log('Usuario autenticado, cargando datos de compra');
+
+    // Rellenar datos del usuario para una interacción más dinámica
+    this.prefillDatosUsuario();
     
     this.route.queryParams.subscribe(params => {
       console.log('Query params recibidos:', params);
       const funcionId = +params['funcionId'];
       const peliculaId = +params['peliculaId'];
+      const productoId = +params['productoId'];
+
+      this.preselectedProductoId = (productoId && productoId > 0)
+        ? productoId
+        : this.leerProductoPreseleccionadoDeStorage();
       
       console.log('FuncionId:', funcionId, 'PeliculaId:', peliculaId);
       
       // Asegurar que estemos en el paso de selección de asientos
       this.currentStep = 0;
+
+      // Limpiar estado de productos/resumen al iniciar una nueva compra
+      this.productoCantidades = {};
+      this.resumenTotal = null;
       
       if (funcionId && funcionId > 0) {
         console.log('Cargando función:', funcionId);
@@ -105,6 +143,7 @@ export class CompraComponent implements OnInit, OnDestroy {
         console.warn('No se proporcionó funcionId válido');
         this.error = 'No se especificó una función para comprar';
         this.loading = false;
+        this.detenerCuentaRegresiva();
       }
       
       if (peliculaId && peliculaId > 0) {
@@ -112,6 +151,32 @@ export class CompraComponent implements OnInit, OnDestroy {
         this.cargarPelicula(peliculaId);
       }
     });
+  }
+
+  private leerProductoPreseleccionadoDeStorage(): number | null {
+    const raw = localStorage.getItem(CompraComponent.LS_PRESELECT_PRODUCT_ID);
+    const parsed = raw ? Number(raw) : NaN;
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }
+
+  private limpiarProductoPreseleccionadoDeStorage(): void {
+    localStorage.removeItem(CompraComponent.LS_PRESELECT_PRODUCT_ID);
+  }
+
+  private aplicarProductoPreseleccionadoSiCorresponde(): void {
+    if (!this.preselectedProductoId) return;
+    const productId = this.preselectedProductoId;
+    const exists = this.productosDisponibles.some(p => p.id === productId);
+    if (!exists) return;
+
+    const actual = this.productoCantidades[productId] || 0;
+    if (actual <= 0) {
+      this.productoCantidades[productId] = 1;
+      this.resumenTotal = null;
+    }
+
+    this.preselectedProductoId = null;
+    this.limpiarProductoPreseleccionadoDeStorage();
   }
 
   cargarFuncion(id: number): void {
@@ -128,6 +193,9 @@ export class CompraComponent implements OnInit, OnDestroy {
         if (response.success && response.data) {
           this.funcion = response.data;
           console.log('Función cargada:', this.funcion);
+
+          // Iniciar (o reiniciar) cuenta regresiva de compra para esta función
+          this.iniciarCuentaRegresiva();
           
           // Cargar película desde la función si no está cargada
           if (this.funcion.pelicula && !this.pelicula) {
@@ -137,16 +205,97 @@ export class CompraComponent implements OnInit, OnDestroy {
           
           // Cargar asientos
           this.cargarAsientos(id);
+
+          // Cargar productos (Chocolatería) de forma opcional
+          this.cargarProductos();
         } else {
           this.error = 'Función no encontrada';
           this.loading = false;
+          this.detenerCuentaRegresiva();
         }
       },
       error: (error) => {
         this.error = error.error?.message || 'Error al cargar la función';
         this.loading = false;
         console.error('Error al cargar función:', error);
+        this.detenerCuentaRegresiva();
       }
+    });
+  }
+
+  private iniciarCuentaRegresiva(): void {
+    this.detenerCuentaRegresiva();
+    this.compraExpirada = false;
+
+    this.compraExpiresAt = Date.now() + CompraComponent.COMPRA_TIMEOUT_MS;
+    this.actualizarTiempoRestante();
+
+    this.countdownSub = interval(1000).subscribe(() => {
+      this.actualizarTiempoRestante();
+      if (this.tiempoRestanteSegundos <= 0) {
+        this.detenerCuentaRegresiva();
+        this.onTiempoExpirado();
+      }
+    });
+  }
+
+  private detenerCuentaRegresiva(): void {
+    if (this.countdownSub) {
+      this.countdownSub.unsubscribe();
+      this.countdownSub = undefined;
+    }
+  }
+
+  private actualizarTiempoRestante(): void {
+    const remainingMs = Math.max(0, this.compraExpiresAt - Date.now());
+    this.tiempoRestanteSegundos = Math.floor(remainingMs / 1000);
+    const minutes = Math.floor(this.tiempoRestanteSegundos / 60);
+    const seconds = this.tiempoRestanteSegundos % 60;
+    this.tiempoRestanteLabel = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+
+  get tiempoPorExpirar(): boolean {
+    return this.tiempoRestanteSegundos > 0 && this.tiempoRestanteSegundos <= 60;
+  }
+
+  private onTiempoExpirado(): void {
+    // Si ya se confirmó la compra, no hacer nada
+    if (this.currentStep >= 4) return;
+
+    this.compraExpirada = true;
+
+    // Liberar asientos seleccionados (si los hay)
+    this.liberarAsientosSeleccionados();
+
+    // Reiniciar estado de la compra
+    this.asientosSeleccionados = [];
+    this.productoCantidades = {};
+    this.resumenTotal = null;
+    this.currentStep = 0;
+
+    // Mantener datos del usuario, pero reiniciar pago/terminos
+    this.compraForm.patchValue({
+      metodoPago: '',
+      aceptarTerminos: false
+    });
+
+    // Refrescar mapa de asientos
+    if (this.funcion?.id) {
+      this.cargarAsientos(this.funcion.id);
+    }
+
+    // Reiniciar el tiempo de compra (nuevo bloque de 5 minutos)
+    this.iniciarCuentaRegresiva();
+  }
+
+  private liberarAsientosSeleccionados(): void {
+    const asientos = [...this.asientosSeleccionados];
+    asientos.forEach(asiento => {
+      if (!asiento.id) return;
+      this.asientoService.liberarAsiento(asiento.id).subscribe({
+        next: () => {},
+        error: () => {}
+      });
     });
   }
 
@@ -343,16 +492,218 @@ export class CompraComponent implements OnInit, OnDestroy {
     return this.asientosSeleccionados.length * precio;
   }
 
+  calcularTotalProductosLocal(): number {
+    return this.obtenerProductosSeleccionados().reduce((acc, item) => acc + (item.precioUnitario * item.cantidad), 0);
+  }
+
+  totalGeneral(): number {
+    if (this.resumenTotal?.total != null) return this.resumenTotal.total;
+    return this.calcularTotal() + this.calcularTotalProductosLocal();
+  }
+
+  private prefillDatosUsuario(): void {
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) return;
+
+    // Prefill básico desde el token/login
+    this.patchIfEmpty('email', currentUser.email);
+    this.patchIfEmpty('nombre', currentUser.nombreCompleto || currentUser.username);
+
+    // Prefill completo desde Cliente
+    if (currentUser.clienteId) {
+      this.clienteService.obtenerClientePorId(currentUser.clienteId).subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            const cliente = response.data;
+            this.patchIfEmpty('telefono', cliente.telefono);
+            this.patchIfEmpty('email', cliente.email);
+            this.patchIfEmpty('nombre', `${cliente.nombre} ${cliente.apellido}`.trim());
+          }
+        },
+        error: (error) => {
+          console.warn('No se pudo cargar información de cliente para prefill:', error);
+        }
+      });
+    }
+  }
+
+  private patchIfEmpty(controlName: string, value: string | undefined | null): void {
+    if (!value) return;
+    const control = this.compraForm.get(controlName);
+    if (!control) return;
+    const current = (control.value ?? '').toString().trim();
+    if (current.length === 0) {
+      control.setValue(value);
+    }
+  }
+
+  cargarProductos(): void {
+    if (this.loadingProductos) return;
+    this.loadingProductos = true;
+
+    this.productoService.obtenerProductosActivos().subscribe({
+      next: (response) => {
+        const data = (response && (response as any).data) ? (response as any).data : [];
+        const normalized: Producto[] = Array.isArray(data)
+          ? data.map((p: Producto) => ({
+              ...p,
+              imagenUrl: p.imagenUrl || (p as any).imagen_url
+            }))
+          : [];
+
+        if (normalized.length > 0) {
+          this.productosDisponibles = normalized;
+          this.loadingProductos = false;
+          this.aplicarProductoPreseleccionadoSiCorresponde();
+          return;
+        }
+
+        // Fallback: si /activos viene vacío, intentar traer todo el catálogo
+        this.productoService.obtenerTodosLosProductos().subscribe({
+          next: (allResp) => {
+            const allData = (allResp && (allResp as any).data) ? (allResp as any).data : [];
+            const allNormalized: Producto[] = Array.isArray(allData)
+              ? allData.map((p: Producto) => ({
+                  ...p,
+                  imagenUrl: p.imagenUrl || (p as any).imagen_url
+                }))
+              : [];
+
+            // Si existe flag activo, mostrar solo activos; si no, mostrar todo.
+            const anyHasActivo = allNormalized.some(p => typeof (p as any).activo === 'boolean');
+            this.productosDisponibles = anyHasActivo
+              ? allNormalized.filter(p => (p as any).activo !== false)
+              : allNormalized;
+
+            this.loadingProductos = false;
+            this.aplicarProductoPreseleccionadoSiCorresponde();
+          },
+          error: (err) => {
+            console.error('Error al cargar catálogo de productos:', err);
+            this.productosDisponibles = [];
+            this.loadingProductos = false;
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error al cargar productos activos:', error);
+
+        // Fallback directo a catálogo completo
+        this.productoService.obtenerTodosLosProductos().subscribe({
+          next: (allResp) => {
+            const allData = (allResp && (allResp as any).data) ? (allResp as any).data : [];
+            const allNormalized: Producto[] = Array.isArray(allData)
+              ? allData.map((p: Producto) => ({
+                  ...p,
+                  imagenUrl: p.imagenUrl || (p as any).imagen_url
+                }))
+              : [];
+
+            const anyHasActivo = allNormalized.some(p => typeof (p as any).activo === 'boolean');
+            this.productosDisponibles = anyHasActivo
+              ? allNormalized.filter(p => (p as any).activo !== false)
+              : allNormalized;
+
+            this.loadingProductos = false;
+            this.aplicarProductoPreseleccionadoSiCorresponde();
+          },
+          error: (err) => {
+            console.error('Error al cargar catálogo de productos:', err);
+            this.productosDisponibles = [];
+            this.loadingProductos = false;
+          }
+        });
+      }
+    });
+  }
+
+  getCantidadProducto(producto: Producto): number {
+    const id = producto.id;
+    if (!id) return 0;
+    return this.productoCantidades[id] || 0;
+  }
+
+  incrementarProducto(producto: Producto): void {
+    if (!producto.id) return;
+    const actual = this.productoCantidades[producto.id] || 0;
+    this.productoCantidades[producto.id] = actual + 1;
+    this.resumenTotal = null;
+  }
+
+  decrementarProducto(producto: Producto): void {
+    if (!producto.id) return;
+    const actual = this.productoCantidades[producto.id] || 0;
+    this.productoCantidades[producto.id] = Math.max(0, actual - 1);
+    this.resumenTotal = null;
+  }
+
+  obtenerProductosParaRequest(): ProductoItem[] {
+    return Object.entries(this.productoCantidades)
+      .map(([productoId, cantidad]) => ({ productoId: Number(productoId), cantidad }))
+      .filter(p => p.productoId > 0 && p.cantidad > 0);
+  }
+
+  obtenerProductosSeleccionados(): { productoId: number; nombre: string; cantidad: number; precioUnitario: number; subtotal: number }[] {
+    const mapProductos = new Map<number, Producto>();
+    this.productosDisponibles.forEach(p => {
+      if (p.id) mapProductos.set(p.id, p);
+    });
+
+    return this.obtenerProductosParaRequest().map(item => {
+      const p = mapProductos.get(item.productoId);
+      const precio = p?.precio ?? 0;
+      return {
+        productoId: item.productoId,
+        nombre: p?.nombre ?? 'Producto',
+        cantidad: item.cantidad,
+        precioUnitario: precio,
+        subtotal: precio * item.cantidad
+      };
+    });
+  }
+
+  private precalcularTotal(): void {
+    if (!this.funcion?.id) return;
+    const asientoIds: number[] = this.asientosSeleccionados
+      .filter(a => a.id)
+      .map(a => a.id!);
+    const productos = this.obtenerProductosParaRequest();
+
+    this.compraService.calcularTotal({
+      funcionId: this.funcion.id,
+      asientoIds,
+      productos
+    }).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.resumenTotal = response.data;
+        } else {
+          this.resumenTotal = null;
+        }
+      },
+      error: (error) => {
+        console.warn('No se pudo precalcular total:', error);
+        this.resumenTotal = null;
+      }
+    });
+  }
+
   siguientePaso(): void {
     if (this.currentStep === 0) {
       if (this.asientosSeleccionados.length === 0) {
         this.error = 'Debes seleccionar al menos un asiento';
         return;
       }
+      // Paso 2: Chocolatería (opcional)
       this.currentStep = 1;
     } else if (this.currentStep === 1) {
+      // Paso 3: Datos de Compra
+      this.currentStep = 2;
+    } else if (this.currentStep === 2) {
       if (this.compraForm.valid) {
-        this.currentStep = 2;
+        // Paso 4: Confirmación
+        this.currentStep = 3;
+        this.precalcularTotal();
       } else {
         this.error = 'Completa todos los campos requeridos';
       }
@@ -416,7 +767,7 @@ export class CompraComponent implements OnInit, OnDestroy {
       clienteId: clienteId,
       funcionId: funcionId,
       asientoIds: asientoIds,
-      productos: [], // TODO: Agregar productos si se implementa
+      productos: this.obtenerProductosParaRequest(),
       metodoPago: this.compraForm.value.metodoPago
     };
     
@@ -427,7 +778,10 @@ export class CompraComponent implements OnInit, OnDestroy {
       next: (response) => {
         if (response.success && response.data) {
           this.loading = false;
-          this.currentStep = 3; // Mostrar confirmación
+          this.currentStep = 4; // Mostrar confirmación
+
+          // Detener cuenta regresiva al finalizar compra
+          this.detenerCuentaRegresiva();
           
           // Guardar datos de la compra confirmada
           this.compraConfirmada = response.data;
@@ -481,19 +835,32 @@ export class CompraComponent implements OnInit, OnDestroy {
     return pelicula.posterUrl || 'https://via.placeholder.com/500x750/1a1a1a/ffffff?text=No+Poster';
   }
 
+  obtenerImagenProducto(producto: Producto | null | undefined): string {
+    const url = producto?.imagenUrl || (producto as any)?.imagen_url;
+    return (url && url.trim().length > 0) ? url : this.fallbackProductoImg;
+  }
+
+  onProductoImgError(event: Event): void {
+    const img = event.target as HTMLImageElement | null;
+    if (!img) return;
+    img.src = this.fallbackProductoImg;
+  }
+
   generarCodigoConfirmacion(): string {
     // Genera un código alfanumérico corto para la confirmación
     return Math.random().toString(36).slice(2, 11).toUpperCase();
   }
 
   ngOnDestroy(): void {
+    this.detenerCuentaRegresiva();
+
     // Limpiar suscripciones
     if (this.asientoUpdateSubscription) {
       this.asientoUpdateSubscription.unsubscribe();
     }
     
     // Liberar todos los asientos seleccionados al salir (si no se confirmó la compra)
-    if (this.currentStep < 3 && this.asientosSeleccionados.length > 0) {
+    if (this.currentStep < 4 && this.asientosSeleccionados.length > 0) {
       this.asientosSeleccionados.forEach(asiento => {
         if (asiento.id) {
           // Liberar via HTTP (fire and forget)

@@ -107,13 +107,18 @@
         <mat-tab label="Horarios">
           <div class="tab-content">
             <h3>Funciones Disponibles</h3>
+
+            <div *ngIf="loadingFunciones" class="loading-container">
+              <mat-spinner diameter="40"></mat-spinner>
+              <p>Cargando funciones...</p>
+            </div>
             
-            <div *ngIf="funciones.length === 0" class="no-funciones">
+            <div *ngIf="!loadingFunciones && funciones.length === 0" class="no-funciones">
               <mat-icon>schedule</mat-icon>
               <p>No hay funciones disponibles para esta película</p>
             </div>
             
-            <div *ngIf="funciones.length > 0" class="funciones-container">
+            <div *ngIf="!loadingFunciones && funciones.length > 0" class="funciones-container">
               <div *ngFor="let fecha of obtenerFechasOrdenadas()" class="fecha-section">
                 <h4 class="fecha-titulo">{{ formatearFechaCompleta(fecha) }}</h4>
                 <div class="funciones-grid">
